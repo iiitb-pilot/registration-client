@@ -341,15 +341,15 @@ public class PacketHandlerController extends BaseController implements Initializ
 				setImage(syncDataImageView, RegistrationConstants.SYNC_IMG);
 			}
 		});
-//		downloadPreRegDataPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
-//			if (newValue) {
-//
-//				setImage(downloadPreRegDataImageView, RegistrationConstants.DOWNLOAD_PREREG_FOCUSED_IMG);
-//			} else {
-//
-//				setImage(downloadPreRegDataImageView, RegistrationConstants.DWLD_PRE_REG_DATA_IMG);
-//			}
-//		});
+		downloadPreRegDataPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
+			if (newValue) {
+
+				setImage(downloadPreRegDataImageView, RegistrationConstants.DOWNLOAD_PREREG_FOCUSED_IMG);
+			} else {
+
+				setImage(downloadPreRegDataImageView, RegistrationConstants.DWLD_PRE_REG_DATA_IMG);
+			}
+		});
 		updateOperatorBiometricsPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
 			if (newValue) {
 				setImage(updateOperatorBiometricsImageView, RegistrationConstants.UPDATE_OP_BIOMETRICS_FOCUSED_IMG);
@@ -746,10 +746,10 @@ public class PacketHandlerController extends BaseController implements Initializ
 		return progressIndicator;
 	}
 	
-//	public GridPane getPreRegDataPane() {
-//		return downloadPreRegDataPane;
-//	}
-
+	public GridPane getPreRegDataPane() {
+		return downloadPreRegDataPane;
+	}
+	
 	public void setInProgressImage(Image image) {
 		inProgressImage.setImage(image);
 	}
@@ -863,7 +863,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 		label.getStyleClass().add("operationalTitle");
 		gridPane.addColumn(1, label);
 		changeNodeOrientation(gridPane);
-		gridPane.setDisable(processSpecDto.isDisabled());
 		return gridPane;
 	}
 	

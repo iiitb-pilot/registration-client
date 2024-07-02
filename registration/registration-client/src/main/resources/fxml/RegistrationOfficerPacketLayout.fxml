@@ -143,45 +143,45 @@
                                         </GridPane>
                                     </children>
                                 </GridPane>
-<!--                                <GridPane fx:id="downloadPreRegDataPane" onMouseClicked="#downloadPreRegData"-->
-<!--                                          prefHeight="90.0" prefWidth="25.0" styleClass="uinUpdateStyle">-->
-<!--                                    <columnConstraints>-->
-<!--                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="121.0" minWidth="10.0"-->
-<!--                                                           prefWidth="90.0"/>-->
-<!--                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="156.0"/>-->
-<!--                                    </columnConstraints>-->
-<!--                                    <rowConstraints>-->
-<!--                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>-->
-<!--                                    </rowConstraints>-->
-<!--                                    <children>-->
-<!--                                        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">-->
-<!--                                            <children>-->
-<!--                                                <ImageView fx:id="downloadPreRegDataImageView" fitHeight="30.0"-->
-<!--                                                           fitWidth="30.0" pickOnBounds="true" preserveRatio="true">-->
-<!--                                                    <image>-->
-<!--                                                        <Image url="@../images/DownloadPreRegData.png"/>-->
-<!--                                                    </image>-->
-<!--                                                </ImageView>-->
-<!--                                            </children>-->
-<!--                                        </VBox>-->
-<!--                                        <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="100.0"-->
-<!--                                              GridPane.columnIndex="1">-->
-<!--                                            <children>-->
-<!--                                                <HBox alignment="CENTER_LEFT" spacing="3.0">-->
-<!--                                                    <children>-->
-<!--                                                        <Label fx:id="lastPreRegPacketDownloadedTime"-->
-<!--                                                               styleClass="operationalDetails" wrapText="true"/>-->
-<!--                                                        <ImageView fx:id="inProgressImage" fitHeight="25.0"-->
-<!--                                                                   fitWidth="25.0" pickOnBounds="true"-->
-<!--                                                                   preserveRatio="true"/>-->
-<!--                                                    </children>-->
-<!--                                                </HBox>-->
-<!--                                                <Label styleClass="operationalTitle" text="%downloadPreregistrationData"-->
-<!--                                                       wrapText="true"/>-->
-<!--                                            </children>-->
-<!--                                        </VBox>-->
-<!--                                    </children>-->
-<!--                                </GridPane>-->
+                                <GridPane fx:id="downloadPreRegDataPane" onMouseClicked="#downloadPreRegData"
+                                          prefHeight="90.0" prefWidth="25.0" styleClass="uinUpdateStyle">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="121.0" minWidth="10.0"
+                                                           prefWidth="90.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="156.0"/>
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                    </rowConstraints>
+                                    <children>
+                                        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+                                            <children>
+                                                <ImageView fx:id="downloadPreRegDataImageView" fitHeight="30.0"
+                                                           fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                                                    <image>
+                                                        <Image url="@../images/DownloadPreRegData.png"/>
+                                                    </image>
+                                                </ImageView>
+                                            </children>
+                                        </VBox>
+                                        <VBox alignment="CENTER_LEFT" prefHeight="200.0" prefWidth="100.0"
+                                              GridPane.columnIndex="1">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="3.0">
+                                                    <children>
+                                                        <Label fx:id="lastPreRegPacketDownloadedTime"
+                                                               styleClass="operationalDetails" wrapText="true"/>
+                                                        <ImageView fx:id="inProgressImage" fitHeight="25.0"
+                                                                   fitWidth="25.0" pickOnBounds="true"
+                                                                   preserveRatio="true"/>
+                                                    </children>
+                                                </HBox>
+                                                <Label styleClass="operationalTitle" text="%downloadPreregistrationData"
+                                                       wrapText="true"/>
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </GridPane>
                                 <GridPane fx:id="updateOperatorBiometricsPane" onMouseClicked="#onBoardUser"
                                           prefHeight="90.0" prefWidth="250.0" styleClass="uinUpdateStyle">
                                     <columnConstraints>
