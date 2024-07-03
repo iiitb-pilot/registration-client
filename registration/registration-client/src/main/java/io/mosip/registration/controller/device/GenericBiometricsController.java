@@ -285,7 +285,7 @@ public class GenericBiometricsController extends BaseController {
 
 		retryBox.setVisible(!isExceptionPhoto(modality));
 		thresholdBox.setVisible(!isExceptionPhoto(modality) && isQualityCheckWithSdkEnabled());
-		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
+//		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
 
 		biometricBox.setVisible(true);
 		biometricType.setText(applicationLabelBundle.getString(modality.name()));
@@ -827,9 +827,6 @@ public class GenericBiometricsController extends BaseController {
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
 		biometricImage.setImage(getBioStreamImage(fieldId, modality, retry));
-		Label test = new Label();
-		test.setText("Quality score");
-		biometricPane.getChildren().addAll(test);
 		if(modality.equals(Modality.FACE) && getRegistrationDTOFromSession().getSelectedFaceAttempt() != null) {
 			biometricImage.setImage(getBioStreamImage(fieldId, modality, getRegistrationDTOFromSession().getSelectedFaceAttempt()));
 		}
