@@ -144,7 +144,7 @@
                                     </children>
                                 </GridPane>
                                 <GridPane fx:id="downloadPreRegDataPane" onMouseClicked="#downloadPreRegData"
-                                          prefHeight="90.0" prefWidth="25.0" styleClass="uinUpdateStyle">
+                                          prefHeight="90.0" prefWidth="25.0" styleClass="uinUpdateStyle" disable="true">
                                     <columnConstraints>
                                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="121.0" minWidth="10.0"
                                                            prefWidth="90.0"/>
