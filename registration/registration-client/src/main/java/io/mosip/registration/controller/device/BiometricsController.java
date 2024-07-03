@@ -105,17 +105,17 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private Label qualityScore;
 
-	@FXML
-	private Label attemptSlap;
+//	@FXML
+//	private Label attemptSlap;
 	
 	@FXML
 	private Label attemptsLabel;
 	
-	@FXML
-	private Label attemptsLabel1;
+//	@FXML
+//	private Label attemptsLabel1;
 	
-	@FXML
-	private Label exceptionsLabel;
+//	@FXML
+//	private Label exceptionsLabel;
 
 	@FXML
 	private Label thresholdScoreLabel;
@@ -165,8 +165,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@Autowired
 	private Streamer streamer;
 
-	@FXML
-	private Label registrationNavlabel;
+//	@FXML
+//	private Label registrationNavlabel;
 
 	@FXML
 	private Label captureTimeValue;
@@ -235,8 +235,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 	@FXML
 	private GridPane backButton;
 
-	@FXML
-	private GridPane gheaderfooter;
+//	@FXML
+//	private GridPane gheaderfooter;
 
 	@Autowired
 	private UserOnboardParentController userOnboardParentController;
@@ -312,9 +312,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 		if(isUserOnboard) {
 			attemptsLabel.setVisible(false);
 			bioRetryBox.setVisible(false);
-			attemptsLabel1.setVisible(false);
-			exceptionsLabel.setVisible(false);
-			attemptSlap.setVisible(false);
+//			attemptsLabel1.setVisible(false);
+//			exceptionsLabel.setVisible(false);
+//			attemptSlap.setVisible(false);
 		}
 		
 		isUserOnboardFlag = isUserOnboard;
@@ -331,14 +331,14 @@ public class BiometricsController extends BaseController /* implements Initializ
 		//removeInapplicableCapturedData(mapToProcess);
 
 		if (isUserOnboard) {
-			registrationNavlabel.setVisible(false);
+//			registrationNavlabel.setVisible(false);
 			backButton.setVisible(false);
-			gheaderfooter.setVisible(false);
+//			gheaderfooter.setVisible(false);
 			continueBtn.setText(applicationContext.getApplicationLanguageLabelBundle().getString("save"));
 		} else {
-			registrationNavlabel.setVisible(true);
+//			registrationNavlabel.setVisible(true);
 			backButton.setVisible(true);
-			gheaderfooter.setVisible(true);
+//			gheaderfooter.setVisible(true);
 			continueBtn.setText(applicationContext.getApplicationLanguageLabelBundle().getString("continue"));
 		}
 
@@ -384,7 +384,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 						Label checkBoxTitle = new Label();
 						checkBoxTitle.setText(applicationLabelBundle.getString("exceptionCheckBoxPaneLabel"));
 						vboxForCheckBox.getChildren().addAll(checkBoxTitle);
-						checkBoxTitle.getStyleClass().add("demoGraphicFieldLabel");
+						checkBoxTitle.getStyleClass().add("bioGraphicFieldLabel");
 
 						vboxForCheckBox.getChildren().add(getExceptionImagePane(biometric.getKey(),
 								listOfCheckBoxes.get(0), listOfCheckBoxes.get(1), subType.getKey().getKey()));
@@ -1492,7 +1492,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.BIOMETRIC_PANES_SELECTED);
 		qualityScore.setText(RegistrationConstants.HYPHEN);
-		attemptSlap.setText(RegistrationConstants.HYPHEN);
+//		attemptSlap.setText(RegistrationConstants.HYPHEN);
 		// duplicateCheckLbl.setText(RegistrationConstants.EMPTY);
 
 		retryBox.setVisible(true);
@@ -1518,7 +1518,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		biometricPane.getStyleClass().clear();
 		biometricPane.getStyleClass().add(RegistrationConstants.FINGERPRINT_PANES_SELECTED);
 		qualityScore.setText(getQualityScoreText(qltyScore));
-		attemptSlap.setText(String.valueOf(retry));
+//		attemptSlap.setText(String.valueOf(retry));
 
 		bioProgress.setProgress(
 				Double.valueOf(getQualityScoreText(qltyScore).split(RegistrationConstants.PERCENTAGE)[0]) / 100);
