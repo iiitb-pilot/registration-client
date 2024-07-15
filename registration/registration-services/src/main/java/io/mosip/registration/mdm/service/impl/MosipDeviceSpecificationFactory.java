@@ -6,16 +6,12 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -42,11 +38,11 @@ import io.mosip.registration.mdm.integrator.MosipDeviceSpecificationProvider;
 import io.mosip.registration.service.BaseService;
 
 /**
- * 
+ *
  * Handles all the Biometric Devices controls
- * 
+ *
  * @author balamurugan.ramamoorthy
- * 
+ *
  */
 @Component
 public class MosipDeviceSpecificationFactory {
@@ -83,6 +79,10 @@ public class MosipDeviceSpecificationFactory {
 
 	private static Map<String, List<MdmBioDevice>> availableDeviceInfoMap = new LinkedHashMap<>();
 
+	private static Map<String,Object> outDatedVersionsMap =new HashMap<>();
+	private static Map<String,Object> unavailableVersionsMap =new HashMap<>();
+
+
 	/**
 	 * This method will prepare the device registry, device registry contains all
 	 * the running biometric devices
@@ -90,10 +90,10 @@ public class MosipDeviceSpecificationFactory {
 	 * In order to prepare device registry it will loop through the specified ports
 	 * and identify on which port any particular biometric device is running
 	 * </p>
-	 * 
+	 *
 	 * Looks for all the configured ports available and initializes all the
 	 * Biometric devices and saves it for future access
-	 * 
+	 *
 	 * @throws RegBaseCheckedException - generalised exception with errorCode and
 	 *                                 errorMessage
 	 */
@@ -205,6 +205,7 @@ public class MosipDeviceSpecificationFactory {
 				LOGGER.debug("Decoding deice info response with provider : {}", deviceSpecificationProvider);
 				List<MdmBioDevice> mdmBioDevices = deviceSpecificationProvider.getMdmDevices(deviceInfoResponse,
 						availablePort);
+				mdmBioDevices = getMdmBioDevices(mdmBioDevices);
 				for (MdmBioDevice bioDevice : mdmBioDevices) {
 					String deviceType = getDeviceType(bioDevice.getDeviceType());
 					String deviceSubType = getDeviceSubType(bioDevice.getDeviceSubType());
@@ -213,15 +214,147 @@ public class MosipDeviceSpecificationFactory {
 						addToDeviceInfoMap(getKey(deviceType, deviceSubType), bioDevice);
 					}
 				}
+				ApplicationContext.setApplicationMap(outDatedVersionsMap);
+				ApplicationContext.setApplicationMap(unavailableVersionsMap);
 			}
 		} catch (RuntimeException runtimeException) {
 			LOGGER.error("Failed to parse / validate MDM response", runtimeException);
 		}
 	}
 
+	private List<MdmBioDevice> getMdmBioDevices( List<MdmBioDevice> mdmBioDevices){
+		LOGGER.info("Entering getMdmBioDevices method with mdmBioDevices: " + mdmBioDevices);
+		List<MdmBioDevice> devices= new ArrayList<>();
+		ObjectMapper objectMapper=new ObjectMapper();
+
+		if(mdmBioDevices!=null) {
+			for (MdmBioDevice device : mdmBioDevices) {
+				LOGGER.info("Processing device: " + device);
+				boolean isAvailable = true;
+				boolean isVersionAvailable = true;
+				try {
+					if ( device.getDeviceProviderName() != null && device.getDeviceType() != null) {
+						LOGGER.info("Device provider name and device type are not null for device: " + device);
+						// Select the appropriate property key based on the device type
+						String propertyValue = null;
+						if (device.getDeviceType().equalsIgnoreCase("Face")) {
+							propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_SUPPORTED_FACE);
+						} else if (device.getDeviceType().equalsIgnoreCase("Finger")) {
+							propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_SUPPORTED_FINGER);
+						} else if (device.getDeviceType().equalsIgnoreCase("Iris")) {
+							propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_SUPPORTED_IRIS);
+						}
+						LOGGER.debug("Device type: " + device.getDeviceType() + ", Property value: " + propertyValue);
+						// Fetch the property value using the selected key
+						if (propertyValue != null) {
+							Map<String, Object> propertyMap = objectMapper.readValue(propertyValue, HashMap.class);
+							Map<String, List<String>> versions = new HashMap<>();
+
+							LOGGER.info("Cast the values from Object to List<String>");
+							for (Map.Entry<String, Object> entry : propertyMap.entrySet()) {
+								Object value = entry.getValue();
+								if (value instanceof List) {
+									versions.put(entry.getKey(), (List<String>) value);
+								}
+							}
+							LOGGER.debug("Versions map: " + versions);
+							if (versions != null) {
+								// Check if the device provider name is in the supported versions
+								String providerName = device.getDeviceProviderName().toUpperCase();
+								if (versions.containsKey(providerName)) {
+									List<String> supportedVersions = versions.get(providerName);
+									boolean isVersionSupported = supportedVersions.stream()
+											.anyMatch(supportedVersion -> compareVersions(device.getSerialVersion(), supportedVersion));
+									if (!isVersionSupported) {
+										LOGGER.info("Unsupported version for device: " + device);
+										isAvailable = false;
+									}
+								} else {
+									LOGGER.warn("Device name unmatched: " + device.getDeviceProviderName());
+									isVersionAvailable=false;
+								}
+							} else {
+								LOGGER.error("Property key not found: " + propertyValue);
+								isAvailable = false;
+							}
+						} else {
+							LOGGER.error("Unsupported device type: " + device.getDeviceType());
+							isVersionAvailable=false;
+						}
+					}
+				} catch (Exception e) {
+					LOGGER.error("Exception occurred while processing device: " + e.getMessage());
+					isAvailable = true;
+					LOGGER.info(" Set isAvailable to true to ensure the device is added to the list in case of Exception to continue with normal flow");
+				}
+
+				if (isAvailable && isVersionAvailable) {
+					LOGGER.info("Adding device to the list: " + device);
+					devices.add(device);
+				}
+				else {
+					if(isVersionAvailable==false){
+						LOGGER.info("Setting application map for unavailable device: " + device);
+						if (unavailableVersionsMap.get("unavail"+device.getDeviceType().toLowerCase()) != null) {
+							String data = device.getSerialVersion() + " " + device.getDeviceProviderName();
+							String value = (String) unavailableVersionsMap.get(device.getDeviceType().toLowerCase());
+							if (!value.contains(data)) {
+								LOGGER.info("Appending to existing entry in unavailableVersionsMap for device type: " + device.getDeviceType().toLowerCase());
+								unavailableVersionsMap.put("unavail"+device.getDeviceType().toLowerCase(), unavailableVersionsMap.get("unavail"+device.getDeviceType().toLowerCase()) + device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " unsupported device ");
+							}
+						} else {
+							LOGGER.info("Creating new entry in unavailableVersionsMap for device type: " + device.getDeviceType().toLowerCase());
+							unavailableVersionsMap.put("unavail"+device.getDeviceType().toLowerCase(), device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " unsupported device ");
+						}
+
+					}else {
+						LOGGER.info("Setting application map for outdated device: " + device);
+						if (outDatedVersionsMap.get(device.getDeviceType().toLowerCase()) != null) {
+							String data = device.getSerialVersion() + " " + device.getDeviceProviderName();
+							String value = (String) outDatedVersionsMap.get(device.getDeviceType().toLowerCase());
+							if (!value.contains(data)) {
+								LOGGER.info("Appending to existing entry in outDatedVersionsMap for device type: " + device.getDeviceType().toLowerCase());
+								outDatedVersionsMap.put(device.getDeviceType().toLowerCase(), outDatedVersionsMap.get(device.getDeviceType().toLowerCase()) + device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " version outdated ");
+							}
+						} else {
+							LOGGER.info("Creating new entry in outDatedVersionsMap for device type: " + device.getDeviceType().toLowerCase());
+							outDatedVersionsMap.put(device.getDeviceType().toLowerCase(), device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " version outdated ");
+						}
+					}
+
+				}
+			}
+		}else {
+			LOGGER.warn("mdmBioDevices list is null.");
+			return devices;
+		}
+		return devices;
+	}
+
+	private boolean compareVersions(String deviceVersion, String configVersion) {
+		String[] deviceVersionParts = deviceVersion.split("\\.");
+		String[] configVersionParts = configVersion.split("\\.");
+
+		int length = Math.max(deviceVersionParts.length, configVersionParts.length);
+		for (int i = 0; i < length; i++) {
+			int devicePart = i < deviceVersionParts.length ? Integer.parseInt(deviceVersionParts[i]) : 0;
+			int configPart = i < configVersionParts.length ? Integer.parseInt(configVersionParts[i]) : 0;
+
+			if (devicePart > configPart) {
+				return true;
+			} else if (devicePart < configPart) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+
+
+
 	private void addToDeviceInfoMap(String key, MdmBioDevice bioDevice) {
 		selectedDeviceInfoMap.put(key, bioDevice);
-		
+
 		if (!key.contains("single")) {
 			if (availableDeviceInfoMap.containsKey(key)) {
 				availableDeviceInfoMap.get(key).add(bioDevice);
@@ -231,7 +364,7 @@ public class MosipDeviceSpecificationFactory {
 				availableDeviceInfoMap.put(key, bioDevices);
 			}
 		}
-		
+
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, APPLICATION_ID,
 				"Added for device into cache : " + bioDevice.getDeviceCode());
 	}
@@ -285,7 +418,7 @@ public class MosipDeviceSpecificationFactory {
 				.setUri(url)
 				.setConfig(requestConfig)
 				.build();
-		
+
 		CloseableHttpResponse clientResponse = null;
 		String response = null;
 
@@ -311,7 +444,7 @@ public class MosipDeviceSpecificationFactory {
 
 			if (getMdsProvider(deviceSpecificationProviders, latestSpecVersion) == null) {
 				List<String> specVersions = Arrays.asList(specVersion);
-				    specVersions.remove(latestSpecVersion);    //NOSONAR removing latestSpecVersion here.
+				specVersions.remove(latestSpecVersion);    //NOSONAR removing latestSpecVersion here.
 				if (!specVersions.isEmpty()) {
 					latestSpecVersion = getLatestSpecVersion(specVersions.toArray(new String[0]));
 				}
@@ -325,7 +458,7 @@ public class MosipDeviceSpecificationFactory {
 	public MdmBioDevice getDeviceInfoByModality(String modality) throws RegBaseCheckedException {
 		String deviceType = getDeviceType(modality);
 		String deviceSubType = getDeviceSubType(modality);
-		
+
 		if (deviceType != null && deviceSubType != null) {
 			String key = getKey(deviceType, deviceSubType);
 			if (key != null && selectedDeviceInfoMap.containsKey(key))
@@ -359,15 +492,15 @@ public class MosipDeviceSpecificationFactory {
 				.filter(provider -> provider.getSpecVersion().equalsIgnoreCase(bioDevice.getSpecVersion())
 						&& provider.isDeviceAvailable(bioDevice))
 				.findFirst();
-		
+
 		String deviceType = getDeviceType(bioDevice.getDeviceType());
 		String deviceSubType = getDeviceSubType(bioDevice.getDeviceSubType());
-		
+
 		if (deviceType == null || deviceSubType == null) {
 			LOGGER.error("DeviceType or DeviceSubType found null");
 			return false;
 		}
-			
+
 		String key = getKey(deviceType, deviceSubType);
 		if (result.isPresent()) {
 			return true;
@@ -470,7 +603,7 @@ public class MosipDeviceSpecificationFactory {
 	public static Map<String, List<MdmBioDevice>> getAvailableDeviceInfo() {
 		return availableDeviceInfoMap;
 	}
-	
+
 	public void modifySelectedDeviceInfo(String key, String serialNumber) {
 		Optional<MdmBioDevice> bioDevice = availableDeviceInfoMap.get(key).stream()
 				.filter(device -> device.getSerialNumber().equalsIgnoreCase(serialNumber)).findAny();

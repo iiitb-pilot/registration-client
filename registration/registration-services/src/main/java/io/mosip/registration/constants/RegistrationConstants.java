@@ -803,6 +803,9 @@ public class RegistrationConstants {
 	public static final String APP_ID = "mosip.registration.audit_application_id";
 	public static final String REVIEWER_AUTH_CONFIG = "mosip.registration.reviewer_authentication_configuration";
 	public static final String QUALITY_SCORE = "mosip.registration.quality_score";
+	public static final String SBI_SUPPORTED_FACE= "mosip.registration.sbisupported.faceversions";
+	public static final String SBI_SUPPORTED_FINGER= "mosip.registration.sbisupported.fingerversions";
+	public static final String SBI_SUPPORTED_IRIS= "mosip.registration.sbisupported.irisversions";
 	public static final String FINGERPRINT_AUTHENTICATION_THRESHOLD = "mosip.fingerprint_authentication.quality_score";
 	public static final String IRIS_AUTHENTICATION_THRESHOLD = "mosip.iris_authentication.quality_score";
 	public static final String FACE_AUTHENTICATION_THRESHOLD = "mosip.face_authentication.quality_score";
