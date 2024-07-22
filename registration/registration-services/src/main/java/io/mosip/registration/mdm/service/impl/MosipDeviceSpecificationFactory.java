@@ -73,15 +73,17 @@ public class MosipDeviceSpecificationFactory {
 
 	private int portFrom;
 	private int portTo;
+	public boolean isAvailableDevice=true;
+	public boolean isVersionSupported=true;
 
 	/** Key is modality value is (specVersion, MdmBioDevice) */
 	private static Map<String, MdmBioDevice> selectedDeviceInfoMap = new LinkedHashMap<>();
 
 	private static Map<String, List<MdmBioDevice>> availableDeviceInfoMap = new LinkedHashMap<>();
 
-	private static Map<String,Object> outDatedVersionsMap =new HashMap<>();
+	private static Map<String,Object> unSupportedVersionsMap =new HashMap<>();
 	private static Map<String,Object> unavailableVersionsMap =new HashMap<>();
-
+	public int deviceSize=0;
 
 	/**
 	 * This method will prepare the device registry, device registry contains all
@@ -188,7 +190,6 @@ public class MosipDeviceSpecificationFactory {
 		return true;
 
 	}
-
 	private void initByPort(Integer availablePort) {
 		LOGGER.debug("Checking device on port : {}", availablePort);
 		String url = mosipDeviceSpecificationHelper.buildUrl(availablePort,
@@ -198,7 +199,6 @@ public class MosipDeviceSpecificationFactory {
 			LOGGER.info("No device is running at port number {}", availablePort);
 			return;
 		}
-
 		try {
 			String deviceInfoResponse = getDeviceInfoResponse(url);
 			for (MosipDeviceSpecificationProvider deviceSpecificationProvider : deviceSpecificationProviders) {
@@ -214,42 +214,46 @@ public class MosipDeviceSpecificationFactory {
 						addToDeviceInfoMap(getKey(deviceType, deviceSubType), bioDevice);
 					}
 				}
-				ApplicationContext.setApplicationMap(outDatedVersionsMap);
+				ApplicationContext.setApplicationMap(unSupportedVersionsMap);
 				ApplicationContext.setApplicationMap(unavailableVersionsMap);
+				deviceSize = mdmBioDevices.size();
 			}
 		} catch (RuntimeException runtimeException) {
 			LOGGER.error("Failed to parse / validate MDM response", runtimeException);
 		}
 	}
 
-	private List<MdmBioDevice> getMdmBioDevices( List<MdmBioDevice> mdmBioDevices){
+	private List<MdmBioDevice> getMdmBioDevices(List<MdmBioDevice> mdmBioDevices) {
 		LOGGER.info("Entering getMdmBioDevices method with mdmBioDevices: " + mdmBioDevices);
-		List<MdmBioDevice> devices= new ArrayList<>();
-		ObjectMapper objectMapper=new ObjectMapper();
+		List<MdmBioDevice> devices = new ArrayList<>();
+		ObjectMapper objectMapper = new ObjectMapper();
 
-		if(mdmBioDevices!=null) {
+		if (mdmBioDevices != null) {
 			for (MdmBioDevice device : mdmBioDevices) {
 				LOGGER.info("Processing device: " + device);
 				boolean isAvailable = true;
 				boolean isVersionAvailable = true;
 				try {
-					if ( device.getDeviceProviderName() != null && device.getDeviceType() != null) {
-						LOGGER.info("Device provider name and device type are not null for device: " + device);
-						// Select the appropriate property key based on the device type
+					if (device.getDeviceProviderName() != null && device.getDeviceType() != null) {
 						String propertyValue = null;
-						if (device.getDeviceType().equalsIgnoreCase("Face")) {
-							propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_SUPPORTED_FACE);
-						} else if (device.getDeviceType().equalsIgnoreCase("Finger")) {
-							propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_SUPPORTED_FINGER);
-						} else if (device.getDeviceType().equalsIgnoreCase("Iris")) {
-							propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_SUPPORTED_IRIS);
+						switch (device.getDeviceType().toLowerCase()) {
+							case "face":
+								propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_UNSUPPORTED_FACE);
+								break;
+							case "finger":
+								propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_UNSUPPORTED_FINGER);
+								break;
+							case "iris":
+								propertyValue = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.SBI_UNSUPPORTED_IRIS);
+								break;
+							default:
+								LOGGER.warn("Unknown device type: " + device.getDeviceType());
 						}
 						LOGGER.debug("Device type: " + device.getDeviceType() + ", Property value: " + propertyValue);
-						// Fetch the property value using the selected key
+
 						if (propertyValue != null) {
 							Map<String, Object> propertyMap = objectMapper.readValue(propertyValue, HashMap.class);
 							Map<String, List<String>> versions = new HashMap<>();
-
 							LOGGER.info("Cast the values from Object to List<String>");
 							for (Map.Entry<String, Object> entry : propertyMap.entrySet()) {
 								Object value = entry.getValue();
@@ -258,77 +262,68 @@ public class MosipDeviceSpecificationFactory {
 								}
 							}
 							LOGGER.debug("Versions map: " + versions);
-							if (versions != null) {
-								// Check if the device provider name is in the supported versions
-								String providerName = device.getDeviceProviderName().toUpperCase();
-								if (versions.containsKey(providerName)) {
-									List<String> supportedVersions = versions.get(providerName);
-									boolean isVersionSupported = supportedVersions.stream()
-											.anyMatch(supportedVersion -> compareVersions(device.getSerialVersion(), supportedVersion));
-									if (!isVersionSupported) {
-										LOGGER.info("Unsupported version for device: " + device);
-										isAvailable = false;
-									}
-								} else {
-									LOGGER.warn("Device name unmatched: " + device.getDeviceProviderName());
-									isVersionAvailable=false;
+
+							String providerName = device.getDeviceProviderName().toUpperCase();
+							if (versions.containsKey(providerName)) {
+								List<String> unsupportedVersions = versions.get(providerName);
+								boolean isVersionUnSupported = unsupportedVersions.stream()
+										.anyMatch(unsupportedVersion -> compareVersions(device.getSerialVersion(), unsupportedVersion));
+								if (isVersionUnSupported) {
+									LOGGER.info("Unsupported version for device: " + device);
+									isAvailable = false;
 								}
 							} else {
-								LOGGER.error("Property key not found: " + propertyValue);
-								isAvailable = false;
+								isVersionAvailable = false;
+								//If device provider name mismatched then isVersionAvailable will be false
+								LOGGER.error("Provider name not found: " + device);
 							}
 						} else {
-							LOGGER.error("Unsupported device type: " + device.getDeviceType());
-							isVersionAvailable=false;
+							LOGGER.error("Property Value null: Failed to retrieve data from Registration constants");
+							isAvailable = true;
 						}
 					}
 				} catch (Exception e) {
 					LOGGER.error("Exception occurred while processing device: " + e.getMessage());
-					isAvailable = true;
-					LOGGER.info(" Set isAvailable to true to ensure the device is added to the list in case of Exception to continue with normal flow");
+					isAvailable = false;
 				}
 
 				if (isAvailable && isVersionAvailable) {
 					LOGGER.info("Adding device to the list: " + device);
 					devices.add(device);
-				}
-				else {
-					if(isVersionAvailable==false){
-						LOGGER.info("Setting application map for unavailable device: " + device);
-						if (unavailableVersionsMap.get("unavail"+device.getDeviceType().toLowerCase()) != null) {
-							String data = device.getSerialVersion() + " " + device.getDeviceProviderName();
-							String value = (String) unavailableVersionsMap.get(device.getDeviceType().toLowerCase());
-							if (!value.contains(data)) {
-								LOGGER.info("Appending to existing entry in unavailableVersionsMap for device type: " + device.getDeviceType().toLowerCase());
-								unavailableVersionsMap.put("unavail"+device.getDeviceType().toLowerCase(), unavailableVersionsMap.get("unavail"+device.getDeviceType().toLowerCase()) + device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " unsupported device ");
-							}
-						} else {
-							LOGGER.info("Creating new entry in unavailableVersionsMap for device type: " + device.getDeviceType().toLowerCase());
-							unavailableVersionsMap.put("unavail"+device.getDeviceType().toLowerCase(), device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " unsupported device ");
-						}
-
-					}else {
-						LOGGER.info("Setting application map for outdated device: " + device);
-						if (outDatedVersionsMap.get(device.getDeviceType().toLowerCase()) != null) {
-							String data = device.getSerialVersion() + " " + device.getDeviceProviderName();
-							String value = (String) outDatedVersionsMap.get(device.getDeviceType().toLowerCase());
-							if (!value.contains(data)) {
-								LOGGER.info("Appending to existing entry in outDatedVersionsMap for device type: " + device.getDeviceType().toLowerCase());
-								outDatedVersionsMap.put(device.getDeviceType().toLowerCase(), outDatedVersionsMap.get(device.getDeviceType().toLowerCase()) + device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " version outdated ");
-							}
-						} else {
-							LOGGER.info("Creating new entry in outDatedVersionsMap for device type: " + device.getDeviceType().toLowerCase());
-							outDatedVersionsMap.put(device.getDeviceType().toLowerCase(), device.getSerialVersion() + " " + device.getDeviceProviderName() + " " + device.getDeviceType() + " version outdated ");
-						}
-					}
-
+				} else {
+					processUnavailableOrUnsupportedDevice(device, isAvailable, isVersionAvailable);
 				}
 			}
-		}else {
+		} else {
 			LOGGER.warn("mdmBioDevices list is null.");
-			return devices;
 		}
 		return devices;
+	}
+
+	private void processUnavailableOrUnsupportedDevice(MdmBioDevice device, boolean isAvailable, boolean isVersionAvailable) {
+		if (!isVersionAvailable) {
+			LOGGER.info("Setting application map for unavailable device: " + device);
+			addToMap(unavailableVersionsMap, "unavail" + device.getDeviceType().toLowerCase(), device, " Unsupported device ");
+			//If device provider name mismatched then those devices will be stored in unavailableVersionsMap
+			isAvailableDevice = false;
+		} else {
+			LOGGER.info("Setting application map for unsupported device: " + device);
+			addToMap(unSupportedVersionsMap, device.getDeviceType().toLowerCase(), device, "Unsupported version ");
+			//Devices with unsupported versions will be stored in unSupportedVersionsMap
+			isVersionSupported = isAvailable;
+		}
+	}
+
+	private void addToMap(Map<String, Object> map, String key, MdmBioDevice device, String message) {
+		String data = device.getSerialVersion() + " " + device.getDeviceProviderName();
+		String value = (String) map.get(key);
+		if (value != null && !value.contains(data)) {
+			LOGGER.info("Appending to existing entry in map for key: " + key);
+			map.put(key, value + data + " " + device.getDeviceType() + " " + message);
+		} else {
+			LOGGER.info("Creating new entry in map for key: " + key);
+			map.put(key, data + " " + device.getDeviceType() + " " + message);
+		}
 	}
 
 	private boolean compareVersions(String deviceVersion, String configVersion) {
@@ -341,16 +336,13 @@ public class MosipDeviceSpecificationFactory {
 			int configPart = i < configVersionParts.length ? Integer.parseInt(configVersionParts[i]) : 0;
 
 			if (devicePart > configPart) {
-				return true;
+				return false;
 			} else if (devicePart < configPart) {
 				return false;
 			}
 		}
 		return true;
 	}
-
-
-
 
 	private void addToDeviceInfoMap(String key, MdmBioDevice bioDevice) {
 		selectedDeviceInfoMap.put(key, bioDevice);

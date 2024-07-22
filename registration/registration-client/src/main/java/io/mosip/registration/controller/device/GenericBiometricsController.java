@@ -522,30 +522,57 @@ public class GenericBiometricsController extends BaseController {
 
 				// Combined check for outdated and unavailable modalities
 				String message = "";
-				switch (currentModality.toString().toLowerCase()) {
-					case "face":
-						if (mapDataFace != null) {
-							message = "Version outdated: " + mapDataFace;
-						} else if (mapDataUnavailableFace != null) {
-							message = "Device is not supported: " + mapDataUnavailableFace;
-						}
-						break;
-					case "finger":
-						if (mapDataFinger != null) {
-							message = "Version outdated: " + mapDataFinger;
-						} else if (mapDataUnavailableFinger != null) {
-							message = "Device is not supported: " + mapDataUnavailableFinger;
-						}
-						break;
-					case "iris":
-						if (mapDataIris != null) {
-							message = "Version outdated: " + mapDataIris;
-						} else if (mapDataUnavailableIris != null) {
-							message = "Device is not supported: " + mapDataUnavailableIris;
-						}
-						break;
-					default:
-						// Handle unsupported modality or error case (optional)
+				if(currentModality.toString().toLowerCase().contains("face")){
+					LOGGER.info("Current modality is face.");
+					if(mapDataFace!=null)
+					{
+						message="Attention: Your current SBI version for the following modality "+mapDataFace+". Please upgrade your SBI to the latest version";
+						LOGGER.error(message);
+					}
+				}
+				else if(currentModality.toString().toLowerCase().contains("fingerprint_slab_left")
+				        ||currentModality.toString().toLowerCase().contains("fingerprint_slab_right")
+				        ||currentModality.toString().toLowerCase().contains("fingerprint_slab_thumbs")){
+					LOGGER.info("Current modality is finger.");
+					if(mapDataFinger!=null)
+					{
+						message="Attention: Your current SBI version for the following modality "+mapDataFinger+". Please upgrade your SBI to the latest version";
+						LOGGER.error(message);
+					}
+				}
+				else if(currentModality.toString().toLowerCase().contains("iris_double")){
+					LOGGER.info("Current modality is iris.");
+					if(mapDataIris!=null)
+					{
+						message="Attention: Your current SBI version for the following modality "+mapDataIris+". Please upgrade your SBI to the latest version";
+						LOGGER.error(message);
+					}
+				}
+				if(currentModality.toString().toLowerCase().contains("face")){
+					LOGGER.info("Current modality is face.");
+					if(mapDataUnavailableFace!=null)
+					{
+						message="Attention: Unsupported face device "+"Please use supported device";
+						LOGGER.error(message);
+					}
+				}
+				else if(currentModality.toString().toLowerCase().contains("fingerprint_slab_left")
+						||currentModality.toString().toLowerCase().contains("fingerprint_slab_right")
+						||currentModality.toString().toLowerCase().contains("fingerprint_slab_thumbs")){
+					LOGGER.info("Current modality is finger.");
+					if(mapDataUnavailableFinger!=null)
+					{
+						message = "Attention: Unsupported finger device "+"Please use supported device";
+						LOGGER.error(message);
+					}
+				}
+				else if(currentModality.toString().toLowerCase().contains("iris_double")){
+					LOGGER.info("Current modality is iris.");
+					if(mapDataUnavailableIris!=null)
+					{
+						message = "Attention: Unsupported iris device "+"Please use supported device";
+						LOGGER.error(message);
+					}
 				}
 
 				// Generate alert based on message

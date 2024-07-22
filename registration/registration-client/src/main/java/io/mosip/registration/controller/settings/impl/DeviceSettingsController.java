@@ -329,14 +329,14 @@ public class DeviceSettingsController extends BaseController implements Settings
 		int rowIndex = 0;
 		int columnIndex = 0;
 
-		String mapDataFace=ApplicationContext.getStringValueFromApplicationMap("face");
-		String mapDataFinger=ApplicationContext.getStringValueFromApplicationMap("finger");
-		String mapDataIris=ApplicationContext.getStringValueFromApplicationMap("iris");
+		String mapDataUnsupportedFace=ApplicationContext.getStringValueFromApplicationMap("face");
+		String mapDataUnSupportedFinger=ApplicationContext.getStringValueFromApplicationMap("finger");
+		String mapDataUnsupportedIris=ApplicationContext.getStringValueFromApplicationMap("iris");
 
-		LOGGER.info("Fetched map data for face, finger, and iris modalities from application context.");
-		LOGGER.debug("mapDataFace: " + mapDataFace);
-		LOGGER.debug("mapDataFinger: " + mapDataFinger);
-		LOGGER.debug("mapDataIris: " + mapDataIris);
+		LOGGER.info("Fetched map data for unsupported modalities from application context.");
+		LOGGER.debug("mapDataFace: " + mapDataUnsupportedFace);
+		LOGGER.debug("mapDataFinger: " + mapDataUnSupportedFinger);
+		LOGGER.debug("mapDataIris: " + mapDataUnsupportedIris);
 
 		String mapDataUnavailableFace=ApplicationContext.getStringValueFromApplicationMap("unavailface");
 		String mapDataUnavailableFinger=ApplicationContext.getStringValueFromApplicationMap("unavailfinger");
@@ -349,9 +349,9 @@ public class DeviceSettingsController extends BaseController implements Settings
 
 		StringBuilder messageBuilder = new StringBuilder();
 		List<String> mapDataList = Arrays.asList(
-				mapDataFace,
-				mapDataFinger,
-				mapDataIris,
+				mapDataUnsupportedFace,
+				mapDataUnSupportedFinger,
+				mapDataUnsupportedIris,
 				mapDataUnavailableFace,
 				mapDataUnavailableFinger,
 				mapDataUnavailableIris
@@ -362,7 +362,6 @@ public class DeviceSettingsController extends BaseController implements Settings
 			}
 		}
 		String message = messageBuilder.toString().trim();
-
 		for (Entry<String, List<MdmBioDevice>> entry : biometricDevices.entrySet()) {
 			GridPane mainGridPane = createDevicePane("biometricDevice", entry.getKey(), entry.getValue(), null);
 			if (applicationContext.isPrimaryLanguageRightToLeft()) {
@@ -384,7 +383,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 		if (!message.isEmpty()) {
 			// Defer the alert generation until after the UI components have been rendered
 			String finalMessage = message;
-			Platform.runLater(() -> generateAlert(RegistrationConstants.ERROR, finalMessage ));
+			Platform.runLater(() -> generateAlert(RegistrationConstants.ERROR, "Attention: " + finalMessage + " Please remove and rerun the application.\nNote: If the current version is unsupported then please Upgrade to latest SBI version or if device is unsupported then kindly switch to supported device"));
 		}
 	}
 

@@ -14,7 +14,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-
+import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -148,6 +148,9 @@ public class GenericController extends BaseController {
 
 	@Autowired
 	private PreRegistrationDataSyncService preRegistrationDataSyncService;
+
+	@Autowired
+	private MosipDeviceSpecificationFactory deviceSpecificationFactory;
 	
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
@@ -557,7 +560,10 @@ public class GenericController extends BaseController {
 				//Hide continue button in preview page
 				next.setVisible(newScreenName.equals("AUTH") ? false : true);
 				authenticate.setVisible(newScreenName.equals("AUTH") ? true : false);
-
+				if(deviceSpecificationFactory.isVersionSupported==false||deviceSpecificationFactory.isAvailableDevice==false || deviceSpecificationFactory.deviceSize==0 ){
+					next.setDisable(newScreenName.equalsIgnoreCase("BiometricDetails"));
+				}
+                    //next.setDisable(newScreenName.equalsIgnoreCase("BiometricDetails"));
 				if(oldValue.intValue() < 0) {
 					tabPane.getSelectionModel().selectFirst();
 					return;
@@ -606,6 +612,7 @@ public class GenericController extends BaseController {
 			}
 		});
 	}
+
 
 	private int getNextSelection(TabPane tabPane, int oldSelection, int newSelection) {
 		if (newSelection-oldSelection <= 1) {
