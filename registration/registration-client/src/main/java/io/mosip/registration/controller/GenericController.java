@@ -560,10 +560,9 @@ public class GenericController extends BaseController {
 				//Hide continue button in preview page
 				next.setVisible(newScreenName.equals("AUTH") ? false : true);
 				authenticate.setVisible(newScreenName.equals("AUTH") ? true : false);
-				if(deviceSpecificationFactory.isVersionSupported==false||deviceSpecificationFactory.isAvailableDevice==false || deviceSpecificationFactory.deviceSize==0 ){
+				if(deviceSpecificationFactory.isVersionSupported==false || deviceSpecificationFactory.deviceSize==0 ){
 					next.setDisable(newScreenName.equalsIgnoreCase("BiometricDetails"));
 				}
-                    //next.setDisable(newScreenName.equalsIgnoreCase("BiometricDetails"));
 				if(oldValue.intValue() < 0) {
 					tabPane.getSelectionModel().selectFirst();
 					return;

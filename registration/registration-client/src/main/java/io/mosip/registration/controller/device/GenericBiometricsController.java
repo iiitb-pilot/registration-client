@@ -71,6 +71,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import static io.mosip.registration.constants.RegistrationUIConstants.*;
+
 /**
  * {@code GenericBiometricsController} is to capture and display the captured
  * biometrics during registration process
@@ -508,73 +510,34 @@ public class GenericBiometricsController extends BaseController {
 			@Override
 			public void handle(WorkerStateEvent t) {
 				LOGGER.info("Entering handle method with WorkerStateEvent: " + t);
-
 				// Fetch map data for modalities
-				String mapDataFace = ApplicationContext.getStringValueFromApplicationMap("face");
-				String mapDataFinger = ApplicationContext.getStringValueFromApplicationMap("finger");
-				String mapDataIris = ApplicationContext.getStringValueFromApplicationMap("iris");
+				String mapDataFace = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FACE_MODALITY);
+				String mapDataFinger = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FINGER_MODALITY);
+				String mapDataIris = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.IRIS_MODALITY);
 				LOGGER.info("Fetched map data for face, finger, and iris modalities from application context.");
-
-				String mapDataUnavailableFace = ApplicationContext.getStringValueFromApplicationMap("unavailface");
-				String mapDataUnavailableFinger = ApplicationContext.getStringValueFromApplicationMap("unavailfinger");
-				String mapDataUnavailableIris = ApplicationContext.getStringValueFromApplicationMap("unavailiris");
-				LOGGER.info("Fetched map data for unavailable modalities: face, finger, and iris modalities from application context.");
-
-				// Combined check for outdated and unavailable modalities
+				String modality = currentModality.toString().toLowerCase();
 				String message = "";
-				if(currentModality.toString().toLowerCase().contains("face")){
+				String preMessage = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNSUPPORTED_PRE_MESSAGE);
+				String postMessage = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNSUPPORTED_POST_MESSAGE);
+				if (modality.contains(RegistrationConstants.FACE_MODALITY)) {
 					LOGGER.info("Current modality is face.");
-					if(mapDataFace!=null)
-					{
-						message="Attention: Your current SBI version for the following modality "+mapDataFace+". Please upgrade your SBI to the latest version";
+					if (mapDataFace != null) {
+						message = preMessage + " " + mapDataFace + " " + postMessage;
 						LOGGER.error(message);
 					}
-				}
-				else if(currentModality.toString().toLowerCase().contains("fingerprint_slab_left")
-				        ||currentModality.toString().toLowerCase().contains("fingerprint_slab_right")
-				        ||currentModality.toString().toLowerCase().contains("fingerprint_slab_thumbs")){
+				} else if (modality.contains(RegistrationConstants.FINGER_SLAB_LEFT) || modality.contains(RegistrationConstants.FINGER_SLAB_RIGHT) || modality.contains(RegistrationConstants.FINGER_SLAB_THUMBS)) {
 					LOGGER.info("Current modality is finger.");
-					if(mapDataFinger!=null)
-					{
-						message="Attention: Your current SBI version for the following modality "+mapDataFinger+". Please upgrade your SBI to the latest version";
+					if (mapDataFinger != null) {
+						message = preMessage + " " + mapDataFinger + " " + postMessage;
 						LOGGER.error(message);
 					}
-				}
-				else if(currentModality.toString().toLowerCase().contains("iris_double")){
+				} else if (modality.contains(RegistrationConstants.IRIS_DOUBLE_MODALITY)) {
 					LOGGER.info("Current modality is iris.");
-					if(mapDataIris!=null)
-					{
-						message="Attention: Your current SBI version for the following modality "+mapDataIris+". Please upgrade your SBI to the latest version";
+					if (mapDataIris != null) {
+						message = preMessage + " " + mapDataIris + " " + postMessage;
 						LOGGER.error(message);
 					}
 				}
-				if(currentModality.toString().toLowerCase().contains("face")){
-					LOGGER.info("Current modality is face.");
-					if(mapDataUnavailableFace!=null)
-					{
-						message="Attention: Unsupported face device "+"Please use supported device";
-						LOGGER.error(message);
-					}
-				}
-				else if(currentModality.toString().toLowerCase().contains("fingerprint_slab_left")
-						||currentModality.toString().toLowerCase().contains("fingerprint_slab_right")
-						||currentModality.toString().toLowerCase().contains("fingerprint_slab_thumbs")){
-					LOGGER.info("Current modality is finger.");
-					if(mapDataUnavailableFinger!=null)
-					{
-						message = "Attention: Unsupported finger device "+"Please use supported device";
-						LOGGER.error(message);
-					}
-				}
-				else if(currentModality.toString().toLowerCase().contains("iris_double")){
-					LOGGER.info("Current modality is iris.");
-					if(mapDataUnavailableIris!=null)
-					{
-						message = "Attention: Unsupported iris device "+"Please use supported device";
-						LOGGER.error(message);
-					}
-				}
-
 				// Generate alert based on message
 				if (!message.isEmpty()) {
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(message));

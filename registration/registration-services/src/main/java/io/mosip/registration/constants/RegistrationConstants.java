@@ -806,6 +806,14 @@ public class RegistrationConstants {
 	public static final String SBI_UNSUPPORTED_FACE= "mosip.registration.sbi.unsupported.faceversions";
 	public static final String SBI_UNSUPPORTED_FINGER= "mosip.registration.sbi.unsupported.fingerversions";
 	public static final String SBI_UNSUPPORTED_IRIS= "mosip.registration.sbi.unsupported.irisversions";
+	public static final String FACE_MODALITY="face";
+	public static final String FINGER_MODALITY="finger";
+	public static final String IRIS_MODALITY="iris";
+	public static final String FINGER_SLAB_LEFT="fingerprint_slab_left";
+	public static final String FINGER_SLAB_RIGHT="fingerprint_slab_right";
+	public static final String FINGER_SLAB_THUMBS="fingerprint_slab_thumbs";
+	public static final String IRIS_DOUBLE_MODALITY="iris_double";
+	public static final String UNSUPPORTED_VERSION="Unsupported version";
 	public static final String FINGERPRINT_AUTHENTICATION_THRESHOLD = "mosip.fingerprint_authentication.quality_score";
 	public static final String IRIS_AUTHENTICATION_THRESHOLD = "mosip.iris_authentication.quality_score";
 	public static final String FACE_AUTHENTICATION_THRESHOLD = "mosip.face_authentication.quality_score";

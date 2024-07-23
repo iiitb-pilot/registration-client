@@ -50,6 +50,8 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import static io.mosip.registration.constants.RegistrationUIConstants.*;
+
 @Controller
 public class DeviceSettingsController extends BaseController implements SettingsInterface {
 
@@ -329,32 +331,20 @@ public class DeviceSettingsController extends BaseController implements Settings
 		int rowIndex = 0;
 		int columnIndex = 0;
 
-		String mapDataUnsupportedFace=ApplicationContext.getStringValueFromApplicationMap("face");
-		String mapDataUnSupportedFinger=ApplicationContext.getStringValueFromApplicationMap("finger");
-		String mapDataUnsupportedIris=ApplicationContext.getStringValueFromApplicationMap("iris");
+		String mapDataUnsupportedFace=ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FACE_MODALITY);
+		String mapDataUnSupportedFinger=ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FINGER_MODALITY);
+		String mapDataUnsupportedIris=ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.IRIS_MODALITY);
 
 		LOGGER.info("Fetched map data for unsupported modalities from application context.");
 		LOGGER.debug("mapDataFace: " + mapDataUnsupportedFace);
 		LOGGER.debug("mapDataFinger: " + mapDataUnSupportedFinger);
 		LOGGER.debug("mapDataIris: " + mapDataUnsupportedIris);
 
-		String mapDataUnavailableFace=ApplicationContext.getStringValueFromApplicationMap("unavailface");
-		String mapDataUnavailableFinger=ApplicationContext.getStringValueFromApplicationMap("unavailfinger");
-		String mapDataUnavailableIris=ApplicationContext.getStringValueFromApplicationMap("unavailiris");
-
-		LOGGER.info("Fetched map data for unavailable modalities:  face, finger, and iris modalities from application context.");
-		LOGGER.debug("mapDataUnavailableFace: " + mapDataUnavailableFace);
-		LOGGER.debug("mapDataUnavailableFinger: " + mapDataUnavailableFinger);
-		LOGGER.debug("mapDataUnavailableIris: " + mapDataUnavailableIris);
-
 		StringBuilder messageBuilder = new StringBuilder();
 		List<String> mapDataList = Arrays.asList(
 				mapDataUnsupportedFace,
 				mapDataUnSupportedFinger,
-				mapDataUnsupportedIris,
-				mapDataUnavailableFace,
-				mapDataUnavailableFinger,
-				mapDataUnavailableIris
+				mapDataUnsupportedIris
 		);
 		for (String mapData : mapDataList) {
 			if (mapData != null) {
@@ -383,7 +373,8 @@ public class DeviceSettingsController extends BaseController implements Settings
 		if (!message.isEmpty()) {
 			// Defer the alert generation until after the UI components have been rendered
 			String finalMessage = message;
-			Platform.runLater(() -> generateAlert(RegistrationConstants.ERROR, "Attention: " + finalMessage + " Please remove and rerun the application.\nNote: If the current version is unsupported then please Upgrade to latest SBI version or if device is unsupported then kindly switch to supported device"));
+			Platform.runLater(() -> generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ATTENTION_MESSAGE)+" " +finalMessage +" "+RegistrationUIConstants.getMessageLanguageSpecific(RERUN)+"\n" +RegistrationUIConstants.getMessageLanguageSpecific(DEVICE_SETTING_UNSUPPORTED_VERSION_MESSAGE)
+					 ));
 		}
 	}
 
