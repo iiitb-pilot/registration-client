@@ -339,7 +339,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImpl implements MosipDevic
 			bioDevice = new MdmBioDevice();
 			bioDevice.setFirmWare(deviceSbiInfo.deviceInfo.getFirmware());
 			bioDevice.setCertification(deviceSbiInfo.deviceInfo.getCertification());
-			bioDevice.setSerialVersion(deviceSbiInfo.deviceInfo.getServiceVersion());
+			bioDevice.setServiceVersion(deviceSbiInfo.deviceInfo.getServiceVersion());
 			bioDevice.setSpecVersion(deviceSpecificationFactory.getLatestSpecVersion(deviceSbiInfo.deviceInfo.getSpecVersion()));
 			bioDevice.setPurpose(deviceSbiInfo.deviceInfo.getPurpose());
 

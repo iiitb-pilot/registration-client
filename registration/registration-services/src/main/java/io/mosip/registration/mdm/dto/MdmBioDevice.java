@@ -10,7 +10,7 @@ public class MdmBioDevice {
 	private String deviceStatus;
 	private String providerName;
 	private String providerId;
-	private String serialVersion;
+	private String serviceVersion;
 	private String certification;
 	private String callbackId;
 	private String deviceModel;

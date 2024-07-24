@@ -306,7 +306,7 @@ public class PacketHandlerServiceTest {
 		Map<String, MdmBioDevice> deviceMap = new HashMap<>();
 		MdmBioDevice device = new MdmBioDevice();
 		device.setSerialNumber("1234");
-		device.setSerialVersion("test_version");
+		device.setServiceVersion("test_version");
 		device.setDeviceCode("test_code");
 		device.setDeviceMake("test_make");
 		deviceMap.put("FINGERPRINT_DEVICE", device);

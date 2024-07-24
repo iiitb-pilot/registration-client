@@ -516,7 +516,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		List<DeviceMetaInfo> capturedRegisteredDevices = new ArrayList<DeviceMetaInfo>();
 		MosipDeviceSpecificationFactory.getDeviceRegistryInfo().forEach((deviceName, device) -> {
 			DeviceMetaInfo registerdDevice = new DeviceMetaInfo();
-			registerdDevice.setDeviceServiceVersion(device.getSerialVersion());
+			registerdDevice.setDeviceServiceVersion(device.getServiceVersion());
 			registerdDevice.setDeviceCode(device.getDeviceCode());
 			DigitalId digitalId = new DigitalId();
 			digitalId.setDateTime(device.getTimestamp());

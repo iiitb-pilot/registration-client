@@ -71,6 +71,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import static io.mosip.registration.constants.RegistrationUIConstants.*;
+
 /**
  * {@code GenericBiometricsController} is to capture and display the captured
  * biometrics during registration process
@@ -447,16 +449,16 @@ public class GenericBiometricsController extends BaseController {
 						LOGGER.info("device search request started {}", System.currentTimeMillis());
 
 						String modality = isFace(currentModality) || isExceptionPhoto(currentModality) ?
-								 RegistrationConstants.FACE_FULLFACE : currentModality.name();
-						 MdmBioDevice bioDevice =deviceSpecificationFactory.getDeviceInfoByModality(modality);
+								RegistrationConstants.FACE_FULLFACE : currentModality.name();
+						MdmBioDevice bioDevice = deviceSpecificationFactory.getDeviceInfoByModality(modality);
 
-						    if (deviceSpecificationFactory.isDeviceAvailable(bioDevice)) {
-	                            return bioDevice;
-	                        } else {
-	                            throw new RegBaseCheckedException(
-	                                    RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
-	                                    RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
-	                        }
+						if (deviceSpecificationFactory.isDeviceAvailable(bioDevice)) {
+							return bioDevice;
+						} else {
+							throw new RegBaseCheckedException(
+									RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorCode(),
+									RegistrationExceptionConstants.MDS_BIODEVICE_NOT_FOUND.getErrorMessage());
+						}
 					}
 				};
 			}
@@ -492,7 +494,7 @@ public class GenericBiometricsController extends BaseController {
 					streamer.startStream(urlStream, biometricImage, biometricImage);
 
 				} catch (RegBaseCheckedException | IOException exception) {
-					LOGGER.error("Error while streaming : " + currentModality,  exception);
+					LOGGER.error("Error while streaming : " + currentModality, exception);
 					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.STREAMING_ERROR));
 
 					// Enable Auto-Logout
@@ -507,14 +509,49 @@ public class GenericBiometricsController extends BaseController {
 		deviceSearchTask.setOnFailed(new EventHandler<WorkerStateEvent>() {
 			@Override
 			public void handle(WorkerStateEvent t) {
-				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+				LOGGER.info("Entering handle method with WorkerStateEvent: " + t);
+				// Fetch map data for modalities
+				String mapDataFace = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FACE_MODALITY);
+				String mapDataFinger = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FINGER_MODALITY);
+				String mapDataIris = ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.IRIS_MODALITY);
+				LOGGER.info("Fetched map data for face, finger, and iris modalities from application context.");
+				String modality = currentModality.toString().toLowerCase();
+				String message = "";
+				String preMessage = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNSUPPORTED_PRE_MESSAGE);
+				String postMessage = RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNSUPPORTED_POST_MESSAGE);
+				if (modality.contains(RegistrationConstants.FACE_MODALITY)) {
+					LOGGER.info("Current modality is face.");
+					if (mapDataFace != null) {
+						message = preMessage + " " + mapDataFace + " " + postMessage;
+						LOGGER.error(message);
+					}
+				} else if (modality.contains(RegistrationConstants.FINGER_SLAB_LEFT) || modality.contains(RegistrationConstants.FINGER_SLAB_RIGHT) || modality.contains(RegistrationConstants.FINGER_SLAB_THUMBS)) {
+					LOGGER.info("Current modality is finger.");
+					if (mapDataFinger != null) {
+						message = preMessage + " " + mapDataFinger + " " + postMessage;
+						LOGGER.error(message);
+					}
+				} else if (modality.contains(RegistrationConstants.IRIS_DOUBLE_MODALITY)) {
+					LOGGER.info("Current modality is iris.");
+					if (mapDataIris != null) {
+						message = preMessage + " " + mapDataIris + " " + postMessage;
+						LOGGER.error(message);
+					}
+				}
+				// Generate alert based on message
+				if (!message.isEmpty()) {
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(message));
+					LOGGER.info("Generated alert with message: " + message);
+				} else {
+					generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.NO_DEVICE_FOUND));
+					LOGGER.error("Device not available");
+				}
+
 				streamer.setUrlStream(null);
 				disableEnableBiometricPane(false);
 			}
 		});
-
 	}
-
 	private void disableEnableBiometricPane(boolean flag) {
 		fxControl.getNode().setDisable(flag);
 		biometric.setDisable(flag);
@@ -667,16 +704,16 @@ public class GenericBiometricsController extends BaseController {
 						convertRequestDto.setVersion("ISO19794_4_2011");
 						convertRequestDto.setInputBytes(dto.getAttributeISO());
 						getRegistrationDTOFromSession().BIO_CAPTURES.put(String.format("%s_%s_%s",
-								fieldId, dto.getBioAttribute(), retry),
+										fieldId, dto.getBioAttribute(), retry),
 								FingerDecoder.convertFingerISOToImageBytes(convertRequestDto));
 						score += dto.getQualityScore();
 						sdkScore += dto.getSdkScore();
 					}
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.name(), retry),
+									fieldId, modalityName.name(), retry),
 							score / biometricsDtos.size());
 					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.name(), retry),
+									fieldId, modalityName.name(), retry),
 							sdkScore / biometricsDtos.size());
 					break;
 				case IRIS_DOUBLE:
@@ -685,16 +722,16 @@ public class GenericBiometricsController extends BaseController {
 						convertRequestDto.setVersion("ISO19794_6_2011");
 						convertRequestDto.setInputBytes(dto.getAttributeISO());
 						getRegistrationDTOFromSession().BIO_CAPTURES.put(String.format("%s_%s_%s",
-								fieldId, dto.getBioAttribute(), retry),
+										fieldId, dto.getBioAttribute(), retry),
 								IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
 						score += dto.getQualityScore();
 						sdkScore += dto.getSdkScore();
 					}
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.name(), retry),
+									fieldId, modalityName.name(), retry),
 							score / biometricsDtos.size());
 					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.name(), retry),
+									fieldId, modalityName.name(), retry),
 							sdkScore / biometricsDtos.size());
 					break;
 
@@ -705,13 +742,13 @@ public class GenericBiometricsController extends BaseController {
 					convertRequestDto.setVersion("ISO19794_5_2011");
 					convertRequestDto.setInputBytes(faceDto.getAttributeISO());
 					getRegistrationDTOFromSession().BIO_CAPTURES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.getAttributes().get(0), retry),
+									fieldId, modalityName.getAttributes().get(0), retry),
 							FaceDecoder.convertFaceISOToImageBytes(convertRequestDto));
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.name(), retry),
+									fieldId, modalityName.name(), retry),
 							faceDto.getQualityScore());
 					getRegistrationDTOFromSession().SDK_SCORES.put(String.format("%s_%s_%s",
-							fieldId, modalityName.name(), retry),
+									fieldId, modalityName.name(), retry),
 							faceDto.getSdkScore());
 					break;
 			}
@@ -1113,7 +1150,7 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	private Pane getExceptionImagePane(Modality modality, List<String> configBioAttributes,
-			List<String> nonConfigBioAttributes, String fieldId) {
+									   List<String> nonConfigBioAttributes, String fieldId) {
 		LOGGER.info("Getting exception image pane for modality : {}", modality);
 
 		Pane exceptionImagePane = getExceptionImagePane(modality);
@@ -1159,7 +1196,7 @@ public class GenericBiometricsController extends BaseController {
 
 
 	private void addExceptionsUiPane(Pane pane, List<String> configBioAttributes, List<String> nonConfigBioAttributes,
-			Modality modality, String fieldId) {
+									 Modality modality, String fieldId) {
 
 		if(pane == null || pane.getChildren() == null) {
 			LOGGER.debug("Nothing to add in exception images ui pane");
@@ -1330,7 +1367,7 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	private ImageView getImageView(String id, String imageName, double fitHeight, double fitWidth, double layoutX,
-			double layoutY, boolean pickOnBounds, boolean preserveRatio, boolean hasActionEvent) {
+								   double layoutY, boolean pickOnBounds, boolean preserveRatio, boolean hasActionEvent) {
 
 		LOGGER.info("Started Preparing exception image view for : {}", id);
 
@@ -1392,7 +1429,7 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	public void init(FxControl fxControl, Modality modality, List<String> configBioAttributes,
-			List<String> nonConfigBioAttributes) throws IOException {
+					 List<String> nonConfigBioAttributes) throws IOException {
 
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.currentModality = modality;
@@ -1415,7 +1452,7 @@ public class GenericBiometricsController extends BaseController {
 	}
 
 	public void initializeWithoutStage(FxControl fxControl, Modality modality, List<String> configBioAttributes,
-					 List<String> nonConfigBioAttributes) {
+									   List<String> nonConfigBioAttributes) {
 
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.scanBtn.setId(this.fxControl.getUiSchemaDTO().getId()+"ScanBtn");

@@ -85,7 +85,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		expectedbioDevice.setProviderName("MOSIP");
 		expectedbioDevice.setPurpose("Registration");
 		expectedbioDevice.setSerialNumber("1");
-		expectedbioDevice.setSerialVersion("1.0");
+		expectedbioDevice.setServiceVersion("1.0");
 		expectedbioDevice.setSpecVersion("1.0");
 		expectedbioDevice.setTimestamp("2021-04-29T05:56:29.909Z");
 		expectedbioDevice.setPort(port);
@@ -153,7 +153,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		actualBioDevice.setProviderName(actualDigitalId.getDeviceProvider());
 		actualBioDevice.setPurpose(deviceSubType.getPurpose());
 		actualBioDevice.setSerialNumber(deviceSubType.getSerialNo());
-		actualBioDevice.setSerialVersion(deviceSubType.getServiceVersion());
+		actualBioDevice.setServiceVersion(deviceSubType.getServiceVersion());
 		actualBioDevice.setSpecVersion("1.0");
 		actualBioDevice.setTimestamp(actualDigitalId.getDateTime());
 		
@@ -202,7 +202,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		inputBioDevice.setProviderName("MOSIP");
 		inputBioDevice.setPurpose("Registration");
 		inputBioDevice.setSerialNumber("1");
-		inputBioDevice.setSerialVersion("1.0");
+		inputBioDevice.setServiceVersion("1.0");
 		inputBioDevice.setSpecVersion("1.0");
 		inputBioDevice.setTimestamp("2021-04-29T05:56:29.909Z");
 		
@@ -257,7 +257,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		inputBioDevice.setProviderName("MOSIP");
 		inputBioDevice.setPurpose("Registration");
 		inputBioDevice.setSerialNumber("1");
-		inputBioDevice.setSerialVersion("1.0");
+		inputBioDevice.setServiceVersion("1.0");
 		inputBioDevice.setSpecVersion("1.0");
 		inputBioDevice.setTimestamp("2021-04-29T05:56:29.909Z");
 		
@@ -291,7 +291,7 @@ public class MosipDeviceSpecification_SBI_1_0_ProviderImplTest {
 		inputBioDevice.setProviderName("MOSIP");
 		inputBioDevice.setPurpose("Registration");
 		inputBioDevice.setSerialNumber("1");
-		inputBioDevice.setSerialVersion("1.0");
+		inputBioDevice.setServiceVersion("1.0");
 		inputBioDevice.setSpecVersion("1.0");
 		inputBioDevice.setTimestamp("2021-04-29T05:56:29.909Z");
 		OngoingStubbing<Boolean> mock = Mockito.when(mockObject.isDeviceAvailable(inputBioDevice)).thenReturn(expected);

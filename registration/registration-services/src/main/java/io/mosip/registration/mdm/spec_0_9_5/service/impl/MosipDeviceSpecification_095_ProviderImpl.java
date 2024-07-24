@@ -356,7 +356,7 @@ public class MosipDeviceSpecification_095_ProviderImpl implements MosipDeviceSpe
 			bioDevice.setDeviceId(deviceInfo.getDeviceId());
 			bioDevice.setFirmWare(deviceInfo.getFirmware());
 			bioDevice.setCertification(deviceInfo.getCertification());
-			bioDevice.setSerialVersion(deviceInfo.getServiceVersion());
+			bioDevice.setServiceVersion(deviceInfo.getServiceVersion());
 			bioDevice.setSpecVersion(deviceSpecificationFactory.getLatestSpecVersion(deviceInfo.getSpecVersion()));
 			bioDevice.setPurpose(deviceInfo.getPurpose());
 			bioDevice.setDeviceCode(deviceInfo.getDeviceCode());

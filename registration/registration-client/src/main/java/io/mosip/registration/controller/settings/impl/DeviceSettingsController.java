@@ -1,10 +1,12 @@
 package io.mosip.registration.controller.settings.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import javafx.application.Platform;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -47,6 +49,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+
+import static io.mosip.registration.constants.RegistrationUIConstants.*;
 
 @Controller
 public class DeviceSettingsController extends BaseController implements SettingsInterface {
@@ -145,24 +149,24 @@ public class DeviceSettingsController extends BaseController implements Settings
 
 	private String getImageByDeviceStatus(String deviceType) {
 		switch (deviceType.toLowerCase()) {
-		case RegistrationConstants.FINGERPRINT_DEVICE_KEY:
-			if (isDeviceAvailable(deviceType)) {
-				return RegistrationConstants.FP_DEVICE_CONNECTED_IMG;
-			} else {
-				return RegistrationConstants.FP_DEVICE_DISCONNECTED_IMG;
-			}
-		case RegistrationConstants.IRIS_DEVICE_KEY:
-			if (isDeviceAvailable(deviceType)) {
-				return RegistrationConstants.IRIS_DEVICE_CONNECTED_IMG;
-			} else {
-				return RegistrationConstants.IRIS_DEVICE_DISCONNECTED_IMG;
-			}
-		case RegistrationConstants.FACE_DEVICE_KEY:
-			if (isDeviceAvailable(deviceType)) {
-				return RegistrationConstants.FACE_DEVICE_CONNECTED_IMG;
-			} else {
-				return RegistrationConstants.FACE_DEVICE_DISCONNECTED_IMG;
-			}
+			case RegistrationConstants.FINGERPRINT_DEVICE_KEY:
+				if (isDeviceAvailable(deviceType)) {
+					return RegistrationConstants.FP_DEVICE_CONNECTED_IMG;
+				} else {
+					return RegistrationConstants.FP_DEVICE_DISCONNECTED_IMG;
+				}
+			case RegistrationConstants.IRIS_DEVICE_KEY:
+				if (isDeviceAvailable(deviceType)) {
+					return RegistrationConstants.IRIS_DEVICE_CONNECTED_IMG;
+				} else {
+					return RegistrationConstants.IRIS_DEVICE_DISCONNECTED_IMG;
+				}
+			case RegistrationConstants.FACE_DEVICE_KEY:
+				if (isDeviceAvailable(deviceType)) {
+					return RegistrationConstants.FACE_DEVICE_CONNECTED_IMG;
+				} else {
+					return RegistrationConstants.FACE_DEVICE_DISCONNECTED_IMG;
+				}
 		}
 		return null;
 	}
@@ -214,7 +218,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 				return new Task<Boolean>() {
 					/*
 					 * (non-Javadoc)
-					 * 
+					 *
 					 * @see javafx.concurrent.Task#call()
 					 */
 					@Override
@@ -280,7 +284,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 			GridPane gridPane = createGridPane(columnsCount);
 			addContentToGridPane(gridPane, biometricDevices, scannerDevices);
 			contentPane.setContent(gridPane);
-			
+
 			SessionContext.map().put(RegistrationConstants.ISPAGE_NAVIGATION_ALERT_REQ,
 					RegistrationConstants.ENABLE);
 		} catch (RegBaseCheckedException exception) {
@@ -323,9 +327,31 @@ public class DeviceSettingsController extends BaseController implements Settings
 	}
 
 	private void addContentToGridPane(GridPane gridPane, Map<String, List<MdmBioDevice>> biometricDevices,
-			List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
+									  List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
 		int rowIndex = 0;
 		int columnIndex = 0;
+
+		String mapDataUnsupportedFace=ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FACE_MODALITY);
+		String mapDataUnSupportedFinger=ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.FINGER_MODALITY);
+		String mapDataUnsupportedIris=ApplicationContext.getStringValueFromApplicationMap(RegistrationConstants.IRIS_MODALITY);
+
+		LOGGER.info("Fetched map data for unsupported modalities from application context.");
+		LOGGER.debug("mapDataFace: " + mapDataUnsupportedFace);
+		LOGGER.debug("mapDataFinger: " + mapDataUnSupportedFinger);
+		LOGGER.debug("mapDataIris: " + mapDataUnsupportedIris);
+
+		StringBuilder messageBuilder = new StringBuilder();
+		List<String> mapDataList = Arrays.asList(
+				mapDataUnsupportedFace,
+				mapDataUnSupportedFinger,
+				mapDataUnsupportedIris
+		);
+		for (String mapData : mapDataList) {
+			if (mapData != null) {
+				messageBuilder.append(mapData).append(" ");
+			}
+		}
+		String message = messageBuilder.toString().trim();
 		for (Entry<String, List<MdmBioDevice>> entry : biometricDevices.entrySet()) {
 			GridPane mainGridPane = createDevicePane("biometricDevice", entry.getKey(), entry.getValue(), null);
 			if (applicationContext.isPrimaryLanguageRightToLeft()) {
@@ -344,10 +370,16 @@ public class DeviceSettingsController extends BaseController implements Settings
 			rowIndex = (columnIndex == 1) ? (rowIndex + 1) : rowIndex;
 			columnIndex = (columnIndex == 1) ? 0 : (columnIndex + 1);
 		}
+		if (!message.isEmpty()) {
+			// Defer the alert generation until after the UI components have been rendered
+			String finalMessage = message;
+			Platform.runLater(() -> generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.ATTENTION_MESSAGE)+" " +finalMessage +" "+RegistrationUIConstants.getMessageLanguageSpecific(RERUN)+"\n" +RegistrationUIConstants.getMessageLanguageSpecific(DEVICE_SETTING_UNSUPPORTED_VERSION_MESSAGE)
+					 ));
+		}
 	}
 
 	private GridPane createDevicePane(String type, String key, List<MdmBioDevice> bioDevices,
-			List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
+									  List<DocScanDevice> scannerDevices) throws RegBaseCheckedException {
 		GridPane mainGridPane = new GridPane();
 		mainGridPane.getStyleClass().add(RegistrationConstants.SYNC_JOB_STYLE);
 
@@ -483,7 +515,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 					Label label = new Label();
 					label.setWrapText(true);
 					label.setPrefWidth(280);
-					
+
 					if (item == null || empty) {
 						setGraphic(null);
 					} else {
@@ -508,7 +540,7 @@ public class DeviceSettingsController extends BaseController implements Settings
 		String selectedScanDevice = documentScanController.getSelectedScanDeviceName();
 		if (selectedScanDevice != null && !selectedScanDevice.isBlank()) {
 			Optional<DocScanDevice> docScanDevice = scannerDevices.stream().filter(device -> device.getId().equalsIgnoreCase(selectedScanDevice)).findFirst();
-			if (docScanDevice.isPresent()) 
+			if (docScanDevice.isPresent())
 				return convertToScanDeviceInfo(docScanDevice.get());
 		}
 		documentScanController.setSelectedScanDeviceName(scannerDevices.get(0).getName());
