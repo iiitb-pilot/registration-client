@@ -27,7 +27,7 @@
 		</rollingPolicy>
 	</appender>
 
-	<logger name="io.mosip" level="INFO" additivity="false">
+	<logger name="io.mosip" level="DEBUG" additivity="false">
 		<appender-ref ref="applicationLog" />
 	</logger>
 
