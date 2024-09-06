@@ -43,9 +43,13 @@ public class MorenaDocScanServiceImpl implements DocScannerService {
                 if(device instanceof Scanner) {
                     Scanner scanner = (Scanner) device;
                     scanner.setMode(Scanner.RGB_8);
+                    LOGGER.info("DPI >>> {}", docScanDevice.getDpi());
                     scanner.setResolution(docScanDevice.getDpi());
-                    scanner.setFrame(docScanDevice.getFrame()[0], docScanDevice.getFrame()[1],
-                            docScanDevice.getFrame()[2], docScanDevice.getFrame()[3]);
+                    if (docScanDevice.getFrame() != null && docScanDevice.getFrame().length > 3) {
+                        scanner.setFrame(docScanDevice.getFrame()[0], docScanDevice.getFrame()[1],
+                                docScanDevice.getFrame()[2], docScanDevice.getFrame()[3]);
+                        LOGGER.info("Scanner frame set: {}", docScanDevice.getFrame());
+                    }
                 }
 
                 if(device instanceof Camera) {
