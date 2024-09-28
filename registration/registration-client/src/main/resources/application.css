@@ -630,11 +630,9 @@
 Working on new Css by taleev
 */
 #loginScreen {
-        -fx-background-image: url('/images/generic-background3.jpg');
-        -fx-background-size: auto,contain;
-        -fx-background-position: left 130px top 125px;
-        -fx-background-repeat: no-repeat;
-        -fx-background-color:white;
+        -fx-background-image: url('/images/zambia-background-image.jpg');
+        -fx-background-size: cover, auto;
+        -fx-background-position: left top, center;
 }
 .whiteBackground {
     -fx-background-color:white
@@ -943,19 +941,21 @@ Working on new Css by taleev
 }
 
 .demoGraphicFieldLabelOnType {
-	-fx-background-color: #ffffff;
-	-fx-border-width: 0.0;
-	-fx-text-fill: #22A8C9;
-	-fx-prompt-text-fill: #000000;
-	-fx-font-size: 1em;
+      -fx-background-color: #ffffff;
+      -fx-border-width: 0.0;
+      -fx-font-weight: bold;
+      -fx-text-fill: black;
+      -fx-font-size: 1em;
+      -fx-min-width: 6em;
 }
 
 .demoGraphicFieldLabel {
-	-fx-background-color: #ffffff;
-	-fx-border-width: 0.0;
-	-fx-text-fill: #666666;
-	-fx-font-size: 1em;
-	-fx-min-width: 6em;
+   -fx-background-color: #ffffff;
+   -fx-border-width: 0.0;
+   -fx-font-weight: bold;
+   -fx-text-fill: black;
+   -fx-font-size: 1em;
+   -fx-min-width: 6em;
 }
 
 .bioGraphicFieldLabel {

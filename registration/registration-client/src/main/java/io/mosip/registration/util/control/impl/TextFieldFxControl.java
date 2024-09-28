@@ -132,7 +132,7 @@ public class TextFieldFxControl extends FxControl {
 
 	@Override
 	public void setListener(Node node) {
-		FXUtils.getInstance().onTypeFocusUnfocusListener((Pane) getNode(), (TextField) node);
+//		FXUtils.getInstance().onTypeFocusUnfocusListener((Pane) getNode(), (TextField) node);
 
 		TextField textField = (TextField) node;
 
@@ -269,7 +269,7 @@ public class TextFieldFxControl extends FxControl {
 				}
 
 				if (isValid()) {
-					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
+//					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
 					setData(null);
 					// handling other handlers
 					demographicChangeActionHandler.actionHandle((Pane) getNode(), node.getId(),
@@ -375,7 +375,7 @@ public class TextFieldFxControl extends FxControl {
 			
 			if (validation.validateTextField((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
 				if (validation.validateForBlockListedWords((Pane) getNode(), textField, uiFieldDTO.getId(), true, langCode)) {
-					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
+//					FXUtils.getInstance().setTextValidLabel((Pane) getNode(), textField, uiFieldDTO.getId());
 					getField(uiFieldDTO.getId() + langCode + "HyperlinkHBox").setVisible(false);
 				} else {
 					FXUtils.getInstance().showErrorLabel(textField, (Pane) getNode());

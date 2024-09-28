@@ -19,7 +19,7 @@
   <right>
     <AnchorPane fx:id="contentPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="489.0">
       <children>
-        <AnchorPane fx:id="userIdPane" layoutX="37.0" layoutY="120.0" styleClass="userNameAnchorPaneStyle" visible="true">
+        <AnchorPane fx:id="userIdPane" layoutX="37.0" layoutY="155.0" styleClass="userNameAnchorPaneStyle" visible="true">
           <children>
             <Label styleClass="higlightedLoginLable" text="%registrationlogin" AnchorPane.leftAnchor="54.0" AnchorPane.topAnchor="20.0" />
             <TextField fx:id="userId" layoutY="158.0" onAction="#validateUserId" promptText="%withusername" styleClass="loginTextStyle" AnchorPane.leftAnchor="53.0" />
@@ -29,7 +29,7 @@
             <Hyperlink fx:id="forgotUsrnme" layoutX="167.0" layoutY="293.0" mnemonicParsing="false" onAction="#forgotUsrname" styleClass="hyperLinkStyle" text="%forgotUsername" visible="false" />
           </children>
         </AnchorPane>
-        <AnchorPane fx:id="credentialsPane" layoutX="37.0" layoutY="120.0" styleClass="loginAnchorPaneExtendedStyle" visible="false">
+        <AnchorPane fx:id="credentialsPane" layoutX="37.0" layoutY="155.0" styleClass="loginAnchorPaneExtendedStyle" visible="false">
           <children>
             <Label styleClass="higlightedLoginLable" text="%registrationlogin" AnchorPane.leftAnchor="57.0" AnchorPane.topAnchor="41.0" />
             <PasswordField fx:id="password" layoutY="116.0" onAction="#validateCredentials" promptText="%withpword" styleClass="loginTextStyle" AnchorPane.leftAnchor="53.0" />
