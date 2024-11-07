@@ -28,7 +28,7 @@ import lombok.NonNull;
 
 /**
  * This DTO class contains the Registration details.
- * 
+ *
  * @author Dinesh Asokan
  * @author Balaji Sridharan
  * @since 1.0.0
@@ -76,6 +76,8 @@ public class RegistrationDTO {
 	// Caches
 	public Map<String, byte[]> BIO_CAPTURES = new HashMap<>();
 	public Map<String, Double> BIO_SCORES = new HashMap<>();
+	public Map<String, Double> INDIVIDUAL_BIO_SCORE = new HashMap<>();
+	public Map<String, Double> INDIVIDUAL_SDK_SCORE = new HashMap<>();
 	public Map<String, Double> SDK_SCORES = new HashMap<>();
 	public Map<String, Object> AGE_GROUPS = new HashMap<>();
 	public Map<String, Integer> ATTEMPTS = new HashMap<>();
@@ -90,6 +92,8 @@ public class RegistrationDTO {
 		this.biometrics.clear();
 		this.biometricExceptions.clear();
 		this.BIO_CAPTURES.clear();
+		this.INDIVIDUAL_BIO_SCORE.clear();
+		this.INDIVIDUAL_SDK_SCORE.clear();
 		this.BIO_SCORES.clear();
 		this.SDK_SCORES.clear();
 		this.ATTEMPTS.clear();
@@ -261,6 +265,8 @@ public class RegistrationDTO {
 		Modality modality = Modality.getModality(bioAttribute);
 		List<String> keys = new ArrayList<>();
 		keys.addAll(this.BIO_CAPTURES.keySet());
+		keys.addAll(this.INDIVIDUAL_BIO_SCORE.keySet());
+		keys.addAll(this.INDIVIDUAL_SDK_SCORE.keySet());
 		keys.addAll(this.biometrics.keySet());
 		keys.addAll(this.biometricExceptions.keySet());
 
@@ -271,6 +277,8 @@ public class RegistrationDTO {
 						this.BIO_SCORES.remove(k);
 						this.SDK_SCORES.remove(k);
 						this.BIO_CAPTURES.remove(k);
+						this.INDIVIDUAL_BIO_SCORE.remove(k);
+						this.INDIVIDUAL_SDK_SCORE.remove(k);
 						this.biometrics.remove(k);
 						this.biometricExceptions.remove(k);
 					});
@@ -314,8 +322,8 @@ public class RegistrationDTO {
 		allIdentityDetails.putAll(this.AGE_GROUPS);
 		allIdentityDetails.putAll(this.SELECTED_CODES);
 		allIdentityDetails.put("isBioException", this.biometricExceptions.size() > 0);
-		
-		
+
+
 		//Added for migrated ui-spec compatibility
 		allIdentityDetails.put("isChild", (getAge() <= Integer.parseInt((String) ApplicationContext.map().getOrDefault(RegistrationConstants.MIN_AGE, "5"))));
 		allIdentityDetails.put("isNew", this.flowType.equals(FlowType.NEW));
@@ -384,7 +392,7 @@ public class RegistrationDTO {
 
 		return qualityScore;
 	}
-	
+
 	public List<String> getSelectedLanguagesByApplicant() {
 		return selectedLanguagesByApplicant;
 	}
@@ -392,5 +400,5 @@ public class RegistrationDTO {
 	public void setSelectedLanguagesByApplicant(List<String> selectedLanguagesByApplicant) {
 		this.selectedLanguagesByApplicant = selectedLanguagesByApplicant;
 	}
-	
+
 }
