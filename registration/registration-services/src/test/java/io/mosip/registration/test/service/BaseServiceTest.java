@@ -79,7 +79,7 @@ public class BaseServiceTest {
 	private MachineMappingDAO machineMappingDAO;
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
-	
+
 	@InjectMocks
 	private BaseService baseService;
 
@@ -100,23 +100,23 @@ public class BaseServiceTest {
 
 	@Mock
 	private RegistrationCenterRepository registrationCenterRepository;
-	
+
 	@Mock
-	private ServiceDelegateUtil serviceDelegateUtil;	
-	
+	private ServiceDelegateUtil serviceDelegateUtil;
+
 	@Mock
 	private UserDetailService userDetailService;
-	
+
 	@Mock
 	private UserDetailDAO userDetailDAO;
-	
+
 	@Mock
 	private CenterMachineReMapService centerMachineReMapService;
-	
+
 	@Mock
 	private PolicySyncService policySyncService;
-	
-		
+
+
 	@Before
 	public void init() throws Exception {
 
@@ -124,18 +124,19 @@ public class BaseServiceTest {
 		Map<String, Object> map = new HashMap<>();
 		map.put(RegistrationConstants.MACHINE_CENTER_REMAP_FLAG, false);
 		map.put(RegistrationConstants.AGE_GROUP_CONFIG, "{'INFANT':'0-5','MINOR':'6-17','ADULT':'18-200'}");
-		ApplicationContext.getInstance().setApplicationMap(map);	
+		ApplicationContext.getInstance();
+		ApplicationContext.setApplicationMap(map);
 		List<String> mandatoryLanguages = getMandaoryLanguages();
 		List<String> optionalLanguages = getOptionalLanguages();
 		int minLanguagesCount = 1;
 		int maxLanguagesCount = 10;
-		
+
 		PowerMockito.mockStatic(ApplicationContext.class, SessionContext.class,
 				RegistrationSystemPropertiesChecker.class);
 		PowerMockito.doReturn(appMap).when(ApplicationContext.class, "map");
 		PowerMockito.doReturn("eng").when(ApplicationContext.class, "applicationLanguage");
 		PowerMockito.doReturn("test").when(RegistrationSystemPropertiesChecker.class, "getMachineId");
-		
+
 		ReflectionTestUtils.setField(baseService, "mandatoryLanguages", mandatoryLanguages);
 		ReflectionTestUtils.setField(baseService, "optionalLanguages", optionalLanguages);
 		ReflectionTestUtils.setField(baseService, "minLanguagesCount", minLanguagesCount);
@@ -148,7 +149,7 @@ public class BaseServiceTest {
 		Mockito.when(SessionContext.userId()).thenReturn("MYUSERID");
 		Assert.assertSame(baseService.getUserIdFromSession(), "MYUSERID");
 	}
-	
+
 	@Test
 	public void getDefaultUserIdTest() throws Exception{
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
@@ -253,30 +254,30 @@ public class BaseServiceTest {
 	public void getCenterIdTest() {
 		MachineMaster machine = new MachineMaster();
 		machine.setRegCenterId("regCenterId");
-		RegistrationCenter registrationCenter = getRegistrationCenter();				
-		Optional<RegistrationCenter> registrationCenterList = Optional.of(registrationCenter);	
+		RegistrationCenter registrationCenter = getRegistrationCenter();
+		Optional<RegistrationCenter> registrationCenterList = Optional.of(registrationCenter);
 		Mockito.when(machineMasterRepository.findByNameIgnoreCase(Mockito.anyString())).thenReturn(machine);
 		Mockito.when(registrationCenterRepository.findByIsActiveTrueAndRegistartionCenterIdIdAndRegistartionCenterIdLangCode("mosip","eng"))
-		.thenReturn(registrationCenterList);		
+		.thenReturn(registrationCenterList);
 		Assert.assertSame(null, baseService.getCenterId());
-	}	
+	}
 	@Test
 	public void getPreparePacketStatusDtoTest() throws Throwable,IOException  {
 		Registration registration = getRegistration();
 		PowerMockito.mockStatic(JsonUtils.class);
 		PowerMockito.mockStatic(FileUtils.class);
-		RegistrationDataDto registrationDataDto = getRegistrationDto();		
-		Mockito.when(JsonUtils.jsonStringToJavaObject(Mockito.any(), Mockito.anyString())).thenReturn(registrationDataDto);		
+		RegistrationDataDto registrationDataDto = getRegistrationDto();
+		Mockito.when(JsonUtils.jsonStringToJavaObject(Mockito.any(), Mockito.anyString())).thenReturn(registrationDataDto);
 		PowerMockito.mockStatic(FileUtils.class);
 		Mockito.when(FileUtils.getFile(Mockito.anyString())).thenReturn(new File("../pom.xml"));
 		Assert.assertNotNull(baseService.preparePacketStatusDto(registration));
 	}
-	
+
 	@Test
 	public void getConfiguredLangCodesTest() throws Throwable,IOException  {
 		Assert.assertNotNull(baseService.getConfiguredLangCodes());
 	}
-	
+
 	@Test
 	public void concatImagesTest() throws Throwable,IOException  {
 		BufferedImage image = getBufferedScannedImage();
@@ -287,7 +288,7 @@ public class BaseServiceTest {
 	}
 
 	@Test
-	public void concatwithMultipleImagesTest() throws Throwable,IOException  {		
+	public void concatwithMultipleImagesTest() throws Throwable,IOException  {
 		BufferedImage image = getBufferedScannedImage();
         PowerMockito.mockStatic(ImageIO.class);
 		when(ImageIO.read(
@@ -305,7 +306,7 @@ public class BaseServiceTest {
 
 		}
 	}
-	
+
 	@Ignore
 	@Test(expected = IOException.class)
 	public void concatImagesWithIOExceptionTest() throws Throwable,IOException  {
@@ -315,19 +316,19 @@ public class BaseServiceTest {
 				baseService.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH))).thenReturn(image);
 		Assert.assertNotNull(baseService.concatImages(null, null,"image"));
 	}
-	
+
 	@Ignore
 	@Test(expected = IOException.class)
-	public void concatwithMultipleImagesIOExceptionTest() throws Throwable,IOException  {		
+	public void concatwithMultipleImagesIOExceptionTest() throws Throwable,IOException  {
 		BufferedImage image = getBufferedScannedImage();
         PowerMockito.mockStatic(ImageIO.class);
 		when(ImageIO.read(
 				baseService.getClass().getResourceAsStream(RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH))).thenReturn(image);
 		Assert.assertNotNull(baseService.concatImages(null, null,null, null,RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH));
 	}
-	
+
 	@Test
-	public void concatwithMultipleImagesNotNullTest() throws Throwable,IOException  {		
+	public void concatwithMultipleImagesNotNullTest() throws Throwable,IOException  {
 		byte[] image1 = "image1".getBytes();
 		try {
 			Assert.assertNotNull(baseService.concatImages(image1, image1, image1, image1,RegistrationConstants.TEMPLATE_EYE_IMAGE_PATH));
@@ -335,9 +336,9 @@ public class BaseServiceTest {
 
 		}
 	}
-	
+
 	@Test
-	public void getHttpResponseErrorsTest()  {		
+	public void getHttpResponseErrorsTest()  {
 		ResponseDTO responseDTO = new ResponseDTO();
 		LinkedHashMap<String, Object> httpResponse = new LinkedHashMap<String, Object>();
 		HashMap<String, String> errorMsgs = new HashMap<String,String>();
@@ -347,10 +348,10 @@ public class BaseServiceTest {
 		httpResponse.put(RegistrationConstants.ERRORS, errorMsgsList);
 		assertNotNull(baseService.getHttpResponseErrors(responseDTO, httpResponse));
 	}
-	
+
 	@Ignore
 	@Test
-	public void commonPreConditionChecksTest() throws PreConditionCheckException,Exception {	
+	public void commonPreConditionChecksTest() throws PreConditionCheckException,Exception {
 		Map<String, Object> globalProps = new HashMap<String, Object>();
 		Map<String, String> localProps = new HashMap<String, String>();
 		localProps.put("key", "value");
@@ -360,7 +361,7 @@ public class BaseServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		Mockito.when(ApplicationContext.applicationLanguage()).thenReturn("eng");
 		Mockito.when(userDetailService.isValidUser("12345")).thenReturn(false);
-		Mockito.when(baseService.isInitialSync()).thenReturn(false);		
+		Mockito.when(baseService.isInitialSync()).thenReturn(false);
 		baseService.commonPreConditionChecks("action");
 	}
 	@Test
@@ -373,7 +374,7 @@ public class BaseServiceTest {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		baseService.proceedWithMasterAndKeySync(RegistrationConstants.INITIAL_SETUP);
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithMasterAndKeySyncForMachineRemappedTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
@@ -381,7 +382,7 @@ public class BaseServiceTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(true);
 		baseService.proceedWithMasterAndKeySync(RegistrationConstants.INITIAL_SETUP);
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithMasterAndKeySyncForStationIdTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
@@ -389,8 +390,8 @@ public class BaseServiceTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
 		Mockito.when(baseService.getStationId()).thenReturn(null);
 		baseService.proceedWithMasterAndKeySync(RegistrationConstants.OPT_TO_REG_PDS_J00003);
-	}	
-	
+	}
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithMasterAndKeySyncForIsMachineCenterActiveTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
@@ -399,15 +400,15 @@ public class BaseServiceTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(false);
 		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(false);
 		baseService.proceedWithMasterAndKeySync(RegistrationConstants.INITIAL_SETUP);
-	}	
-	
+	}
+
 	@Test
 	public void proceedWithMachineCenterRemapTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		baseService.proceedWithMachineCenterRemap();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithSoftwareUpdateTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
@@ -415,7 +416,7 @@ public class BaseServiceTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(true);
 		baseService.proceedWithSoftwareUpdate();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithOperatorOnboardMachineRemappedTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
@@ -423,7 +424,7 @@ public class BaseServiceTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(true);
 		baseService.proceedWithOperatorOnboard();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithOperatorOnboardMachineIdTest() throws PreConditionCheckException,Exception {
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
@@ -432,7 +433,7 @@ public class BaseServiceTest {
 		Mockito.when(baseService.getStationId()).thenReturn(null);
 		baseService.proceedWithOperatorOnboard();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithOperatorOnboardMachineCenterActiveTest() throws PreConditionCheckException, Exception {
 		MachineMaster machine = new MachineMaster();
@@ -451,13 +452,13 @@ public class BaseServiceTest {
 		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(false);
 		baseService.proceedWithOperatorOnboard();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
-	public void proceedWithRegistrationforSessionContextAvailableTest() throws PreConditionCheckException,Exception {		
+	public void proceedWithRegistrationforSessionContextAvailableTest() throws PreConditionCheckException,Exception {
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
 		baseService.proceedWithRegistration();
-	}	
-	
+	}
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationforInitialSyncTest() throws PreConditionCheckException,Exception {
 		Map<String,Object> appMap = new HashMap<>();
@@ -469,7 +470,7 @@ public class BaseServiceTest {
 		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(true);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationforMachineRemappedTest() throws PreConditionCheckException,Exception {
 		Map<String,Object> appMap = new HashMap<>();
@@ -481,7 +482,7 @@ public class BaseServiceTest {
 		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(true);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationMachineRemappedTest() throws PreConditionCheckException,Exception {
 		Mockito.when(SessionContext.userId()).thenReturn("110011");
@@ -490,7 +491,7 @@ public class BaseServiceTest {
 		Mockito.when(centerMachineReMapService.isMachineRemapped()).thenReturn(true);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationStationIdTest() throws PreConditionCheckException,Exception {
 		Mockito.when(SessionContext.userId()).thenReturn("110011");
@@ -500,7 +501,7 @@ public class BaseServiceTest {
 		Mockito.when(baseService.getStationId()).thenReturn(null);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationMachineCenterActiveTest() throws PreConditionCheckException, Exception {
 		MachineMaster machine = new MachineMaster();
@@ -520,7 +521,7 @@ public class BaseServiceTest {
 		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(false);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationForCheckKeyValidationTest() throws PreConditionCheckException, Exception {
 		MachineMaster machine = new MachineMaster();
@@ -541,7 +542,7 @@ public class BaseServiceTest {
 		Mockito.when(policySyncService.checkKeyValidation()).thenReturn(null);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithRegistrationForCheckKeyValidationDTONotNullTest() throws PreConditionCheckException, Exception {
 		ResponseDTO responseDTO = getResponseDTO();
@@ -563,7 +564,7 @@ public class BaseServiceTest {
 		Mockito.when(policySyncService.checkKeyValidation()).thenReturn(responseDTO);
 		baseService.proceedWithRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void commonPreConditionChecksforSessionContextAvailableTest() throws PreConditionCheckException,Exception {
 		MachineMaster machine = new MachineMaster();
@@ -578,22 +579,22 @@ public class BaseServiceTest {
 		}
 		Mockito.when(serviceDelegateUtil.isNetworkAvailable()).thenReturn(true);
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
-		Mockito.when(SessionContext.userId()).thenReturn("110011");		
+		Mockito.when(SessionContext.userId()).thenReturn("110011");
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(false);
 		baseService.commonPreConditionChecks("action");
 	}
-	
-	
+
+
 	@Test(expected = PreConditionCheckException.class)
-	public void proceedWithReRegistrationMachineIdTest() throws PreConditionCheckException, Exception {	
+	public void proceedWithReRegistrationMachineIdTest() throws PreConditionCheckException, Exception {
 		Mockito.when(SessionContext.userId()).thenReturn("110011");
 		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(true);
 		Mockito.when(userDetailService.isValidUser(Mockito.anyString())).thenReturn(true);
 		Mockito.when(baseService.getStationId()).thenReturn(null);
 		baseService.proceedWithReRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithReRegistrationMachineCenterActiveTest() throws PreConditionCheckException, Exception {
 		MachineMaster machine = new MachineMaster();
@@ -613,7 +614,7 @@ public class BaseServiceTest {
 		Mockito.when(registrationCenterDAO.isMachineCenterActive()).thenReturn(false);
 		baseService.proceedWithReRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithReRegistrationForCheckKeyValidationTest() throws PreConditionCheckException, Exception {
 		ResponseDTO responseDTO = null;
@@ -635,7 +636,7 @@ public class BaseServiceTest {
 		Mockito.when(policySyncService.checkKeyValidation()).thenReturn(responseDTO);
 		baseService.proceedWithReRegistration();
 	}
-	
+
 	@Test(expected = PreConditionCheckException.class)
 	public void proceedWithReRegistrationForCheckKeyValidationDTONotNullTest() throws PreConditionCheckException, Exception {
 		ResponseDTO responseDTO = getResponseDTO();
@@ -657,14 +658,14 @@ public class BaseServiceTest {
 		Mockito.when(policySyncService.checkKeyValidation()).thenReturn(responseDTO);
 		baseService.proceedWithReRegistration();
 	}
-	
+
 	private ResponseDTO getResponseDTO() {
 		ResponseDTO responseDTO = new ResponseDTO();
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		successResponseDTO.setMessage("message");;
 		responseDTO.setSuccessResponseDTO(successResponseDTO);
 		return responseDTO;
-		
+
 	}
 	private BufferedImage getBufferedScannedImage() {
 		DocScannerFacade facade = new DocScannerFacade();
@@ -675,7 +676,7 @@ public class BaseServiceTest {
 		device.setId("SCANNER_001");
 		device.setName("SCANNER_001");
 		device.setServiceName("Test-Scanner");
-		BufferedImage image = facade.scanDocument(device);
+		BufferedImage image = facade.scanDocument(device, ".*");
 		return image;
 	}
 	private List<String> getMandaoryLanguages() {
@@ -689,7 +690,7 @@ public class BaseServiceTest {
 		mandLanguages.add("Hindi");
 		return mandLanguages;
 	}
-	
+
 	private RegistrationDataDto getRegistrationDto() {
 		RegistrationDataDto registrationDataDto=new RegistrationDataDto();
 		registrationDataDto.setName("test");
@@ -698,17 +699,17 @@ public class BaseServiceTest {
 		registrationDataDto.setLangCode("eng,fra");
 		return registrationDataDto;
 	}
-	
-	
-	private RegistrationCenter getRegistrationCenter() {		
+
+
+	private RegistrationCenter getRegistrationCenter() {
 		RegistrationCenter registrationCenter = new RegistrationCenter();
 		RegistartionCenterId registartionCenterId = new RegistartionCenterId();
 		registartionCenterId.setId("10011");
 		registrationCenter.setRegistartionCenterId(registartionCenterId);
 		return registrationCenter;
 	}
-	
-	private Registration getRegistration() {		
+
+	private Registration getRegistration() {
 		Registration registration = new Registration();
 		byte[] additionalInfo = "slkdalskdjslkajdjadj".getBytes();
 		registration.setAppId("appId");
@@ -725,7 +726,7 @@ public class BaseServiceTest {
 		registration.setRegUsrId("regUsrId");
 		registration.setAdditionalInfo(additionalInfo);
 		return registration;
-		
+
 	}
 	 private DocScannerService getMockDocScannerService() {
 	        return new DocScannerService() {
@@ -734,13 +735,13 @@ public class BaseServiceTest {
 	                return "Test-Scanner";
 	            }
 
-	            @Override
-	            public BufferedImage scan(DocScanDevice docScanDevice) {
-	                try {
-	                    return ImageIO.read(this.getClass().getResourceAsStream("/images/stubdoc.png"));
-	                } catch (IOException e) { }
-	                return null;
-	            }
+			@Override
+			public BufferedImage scan(DocScanDevice docScanDevice, String deviceType) {
+				try {
+					return ImageIO.read(this.getClass().getResourceAsStream("/images/stubdoc.png"));
+				} catch (IOException e) { }
+				return null;
+			}
 
 	            @Override
 	            public List<DocScanDevice> getConnectedDevices() {

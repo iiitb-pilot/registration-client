@@ -1,43 +1,35 @@
 package io.mosip.registration.controller.device;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_IRIS_CAPTURE_CONTROLLER;
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_SCAN_CONTROLLER;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
-import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import io.mosip.registration.api.docscanner.DocScannerFacade;
-import io.mosip.registration.api.docscanner.DocScannerUtil;
-import io.mosip.registration.api.docscanner.dto.DocScanDevice;
-import io.mosip.registration.util.common.RectangleSelection;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.concurrent.Task;
-import javafx.event.EventHandler;
-import javafx.scene.control.*;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.StackPane;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.api.docscanner.DocScannerFacade;
+import io.mosip.registration.api.docscanner.DocScannerUtil;
+import io.mosip.registration.api.docscanner.dto.DocScanDevice;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.reg.DocumentScanController;
+import io.mosip.registration.util.common.RectangleSelection;
+import javafx.application.Platform;
 import io.mosip.registration.util.control.FxControl;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
@@ -45,12 +37,17 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 @Controller
 public class ScanPopUpViewController extends BaseController implements Initializable {
@@ -99,7 +96,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	@FXML
 	private ImageView backImageView1;
 	@FXML
-	private ImageView cancelImageView;	
+	private ImageView cancelImageView;
 	@FXML
 	private ImageView previewImageView;
 	@FXML
@@ -177,7 +174,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		
+
 		//setImage(closeImageView	, RegistrationConstants.CLOSE_IMG);
 		setImage(streamImageView	, RegistrationConstants.STREAM_IMG);
 		setImage(captureImageView	, RegistrationConstants.SCAN_IMG);
@@ -200,7 +197,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	/**
 	 * This method will open popup to scan
-	 * 
+	 *
 	 * @param parentControllerObj
 	 * @param title
 	 */
@@ -322,7 +319,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	/**
 	 * This method will allow to scan
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 */
@@ -419,7 +416,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 				scanImage.setImage(null);
 
 				initializeDocPages(0, 0);
-
+				getImageGroup().getChildren().clear();
 				previewOption.setVisible(false);
 
 			}
@@ -655,7 +652,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 				while (isWebCamStream()) {
 					try {
 						if (!isStreamPaused()) {
-							getScanImage().setImage(DocScannerUtil.getImage(docScannerFacade.scanDocument(docScanDevice)));
+							getScanImage().setImage(DocScannerUtil.getImage(docScannerFacade.scanDocument(docScanDevice, getValueFromApplicationContext(RegistrationConstants.IMAGING_DEVICE_TYPE))));
 						}
 					} catch (Throwable t) {
 						LOGGER.error("Error while streaming the captured photo", t);
