@@ -34,7 +34,7 @@ ENV host_name_env=${host_name}
 
 ENV keystore_secret_env=${keystore_secret}
 
-ENV signer_timestamp_url_env=${signer_timestamp_url}
+#ENV signer_timestamp_url_env=${signer_timestamp_url}
 
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
