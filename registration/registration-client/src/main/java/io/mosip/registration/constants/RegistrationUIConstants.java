@@ -159,6 +159,9 @@ public class RegistrationUIConstants {
 	public static final String POR_DOCUMENT_EMPTY = "porDocuments";
 	public static final String DOB_DOCUMENT_EMPTY = "dobDocuments";
 	public static final String SCAN_DOCUMENT_ERROR = "SCAN_DOCUMENT_ERROR";
+	public static final String SCAN_SAVE_ERROR="SCAN_SAVE_ERROR";
+	public static final String SCAN_NO_DEVICE_FOUND="SCAN_NO_DEVICE_FOUND";
+	public static final String SCAN_FAILED="SCAN_FAILED";
 	public static final String STREAMING_PREP_MESSAGE = "STREAMING_PREP_MESSAGE";
 	public static final String STREAMING_INIT_MESSAGE = "STREAMING_INIT_MESSAGE";
 	public static final String STREAMING_CLOSED_MESSAGE = "STREAMING_CLOSED_MESSAGE";
@@ -269,6 +272,7 @@ public class RegistrationUIConstants {
 	public static final String IRIS_SCANNING_ERROR = "IRIS_SCANNING_ERROR";
 	public static final String FINGERPRINT_SCANNING_ERROR = "FINGERPRINT_SCANNING_ERROR";
 	public static final String NO_DEVICE_FOUND = "NO_DEVICE_FOUND";
+	public static final String SCAN_DEVICE_DISCONNECTED="SCAN_DEVICE_DISCONNECTED";
 	public static final String FINGERPRINT_SELECTION_PANE_ALERT = "FINGERPRINT_SELECTION_PANE_ALERT";
 	public static final String FINGERPRINT_SCAN_ALERT = "FINGERPRINT_SCAN_ALERT";
 	public static final String IRIS_VALIDATION_ERROR = "IRIS_VALIDATION_ERROR";

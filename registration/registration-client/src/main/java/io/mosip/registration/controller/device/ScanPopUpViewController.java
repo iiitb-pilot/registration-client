@@ -4,7 +4,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -94,7 +97,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	@FXML
 	private ImageView backImageView1;
 	@FXML
-	private ImageView cancelImageView;	
+	private ImageView cancelImageView;
 	@FXML
 	private ImageView previewImageView;
 	@FXML
@@ -126,6 +129,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	private boolean isStreamPaused;
 	public DocScanDevice docScanDevice;
 	private RectangleSelection rectangleSelection = null;
+	private boolean isScanningInProgress = false;
 	final DoubleProperty zoomProperty = new SimpleDoubleProperty(200);
 
 	public Group getImageGroup() {
@@ -171,7 +175,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		
+
 		//setImage(closeImageView	, RegistrationConstants.CLOSE_IMG);
 		setImage(streamImageView	, RegistrationConstants.STREAM_IMG);
 		setImage(captureImageView	, RegistrationConstants.SCAN_IMG);
@@ -194,7 +198,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	/**
 	 * This method will open popup to scan
-	 * 
+	 *
 	 * @param parentControllerObj
 	 * @param title
 	 */
@@ -316,7 +320,7 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	/**
 	 * This method will allow to scan
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws MalformedURLException
 	 */
@@ -324,27 +328,106 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 	public void scan() throws MalformedURLException, IOException {
 		LOGGER.info("Invoke scan method for the passed controller");
 		scanningMsg.setVisible(true);
+		isScanningInProgress = true; // Set flag when scanning starts
 		setWebCamStream(false);
-		String docNumber = docCurrentPageNumber.getText();
-		int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.valueOf(docNumber);
 
-		if(rectangleSelection != null) {
-			save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
-		}
-		else {
-			baseController.scan(popupStage);
-			currentPage = documentScanController.getScannedPages().size();
+		List<DocScanDevice> realScanners = docScannerFacade.getConnectedDevices()
+				.stream()
+				.filter(device -> !device.getServiceName().equals("MOSIP-STUB")) // Skip dummy scanner
+				.collect(Collectors.toList());
+		if (realScanners.isEmpty()) {
+			isScanningInProgress = false;
+			handleScanFailure(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_NO_DEVICE_FOUND));
+			return;
 		}
 
-		showPreview(true);
-		if(documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
-			int totalCount = documentScanController.getScannedPages().size();
-			initializeDocPages(currentPage, totalCount);
-			getImageGroup().getChildren().clear();
-			getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(currentPage-1))));
+		Optional<DocScanDevice> activeScanner = realScanners.stream()
+				.filter(device -> device.getId().equals(this.docScanDevice.getId()))
+				.findFirst();
+
+		if (!activeScanner.isPresent()) {
+			isScanningInProgress = false;
+			handleScanFailure(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_NO_DEVICE_FOUND));
+			return;
 		}
-		saveBtn.setDisable(false);
+
+		DocScanDevice scannerInUse = activeScanner.get();
+		LOGGER.info("Using scanner: {} (ID: {}, DPI: {}, Width: {}, Height: {})",
+				scannerInUse.getName(), scannerInUse.getId(), scannerInUse.getDpi(),
+				scannerInUse.getWidth(), scannerInUse.getHeight());
+
+		Thread scanTimeoutThread = new Thread(() -> {
+			try {
+				Thread.sleep(15000);
+				if (isScanningInProgress) { // Check flag instead of scanningMsg.isVisible()
+					Platform.runLater(() -> handleScanFailure(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_FAILED)));
+				}
+			} catch (InterruptedException e) {
+				LOGGER.error("Error in scan timeout thread", e);
+			}
+		});
+		scanTimeoutThread.start();
+
+		try {
+			String docNumber = docCurrentPageNumber.getText();
+			int currentPage = (docNumber == null || docNumber.isEmpty() || docNumber.equals("0")) ? 1 : Integer.parseInt(docNumber);
+
+			BufferedImage scannedImage = null;
+			if (rectangleSelection != null) {
+				scannedImage = documentScanController.getScannedPages().get(currentPage - 1);
+				save(rectangleSelection.getBounds(), scannedImage);
+			} else {
+				baseController.scan(popupStage);
+
+				if (!documentScanController.getScannedPages().isEmpty()) {
+					scannedImage = documentScanController.getScannedPages()
+							.get(documentScanController.getScannedPages().size() - 1);
+				}
+			}
+
+			if (scannedImage == null) {
+				isScanningInProgress = false;
+				handleScanFailure(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_FAILED));
+				return;
+			}
+
+			scanTimeoutThread.interrupt();
+			isScanningInProgress = false; // Reset flag on success
+
+			showPreview(true);
+			if (documentScanController.getScannedPages() != null && !documentScanController.getScannedPages().isEmpty()) {
+				int totalCount = documentScanController.getScannedPages().size();
+				initializeDocPages(currentPage, totalCount);
+				getImageGroup().getChildren().clear();
+				getImageGroup().getChildren().add(new ImageView(getImage(documentScanController.getScannedPages().get(currentPage - 1))));
+			}
+			saveBtn.setDisable(false);
+		} catch (Exception e) {
+			LOGGER.error("Unexpected error during scanning", e);
+			isScanningInProgress = false;
+			handleScanFailure(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_FAILED));
+		}
 	}
+
+	private void handleScanFailure(String errorMessage) {
+		isScanningInProgress = false; // Reset flag on failure
+		Platform.runLater(() -> generateAlert(RegistrationConstants.ERROR, errorMessage));
+
+		new Thread(() -> {
+			try {
+				Thread.sleep(5000);
+				Platform.runLater(() -> {
+					if (popupStage.isShowing()) {
+						popupStage.close();
+						LOGGER.info("Popup closed due to scan failure.");
+					}
+				});
+			} catch (InterruptedException e) {
+				LOGGER.error("Error in scan failure auto-close timer", e);
+			}
+		}).start();
+	}
+
 
 	@FXML
 	private void save() {
