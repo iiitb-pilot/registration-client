@@ -123,7 +123,16 @@ public class RegistrationDTO {
 			this.demographics.put(fieldId, values);
 		}
 	}
-
+	public void addDemographicFields(@NonNull String fieldId, List<String> values) {
+		if (values != null && !values.isEmpty()) {
+			if (fieldId.equals("selectedHandles")) {
+				this.demographics.computeIfAbsent(fieldId, k -> new ArrayList<String>());
+				((List<String>) this.demographics.get(fieldId)).addAll(values);
+			} else {
+				this.demographics.put(fieldId, values);
+			}
+		}
+	}
 	public void removeDemographicField(String fieldId) {
 		this.demographics.remove(fieldId);
 	}
