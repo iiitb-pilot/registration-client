@@ -766,7 +766,6 @@ public class GenericController extends BaseController {
 			screenTab.setContent(scrollPane);
 			tabPane.getTabs().add(screenTab);
 		}
-		getRegistrationDTOFromSession().addDemographicFields("selectedHandles", Arrays.asList("phone", "email","passport","brnNumber"));
 		//refresh to reflect the initial visibility configuration
 		refreshFields();
 		addPreviewAndAuthScreen(tabPane);

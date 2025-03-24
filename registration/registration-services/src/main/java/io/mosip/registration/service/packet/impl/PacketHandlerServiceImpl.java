@@ -194,6 +194,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		
 		Map<String, String> metaInfoMap = new LinkedHashMap<>();
 		try {
+			updateSelectedHandles(registrationDTO);
 			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
 			setDemographics(registrationDTO);
 			setDocuments(registrationDTO, metaInfoMap);
@@ -263,6 +264,21 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		}
 		LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Registration Handler had been ended");
 		return responseDTO;
+	}
+	private void updateSelectedHandles(RegistrationDTO registrationDTO) {
+		List<String> requiredFields = Arrays.asList("phone", "email", "passport", "brnNumber");
+		List<String> selectedHandles = new ArrayList<>();
+
+		Map<String, Object> demographics = registrationDTO.getDemographics();
+
+		for (String fieldId : requiredFields) {
+			if (demographics.containsKey(fieldId)) {
+				selectedHandles.add(fieldId);
+			}
+		}
+		if (!selectedHandles.isEmpty()) {
+			registrationDTO.addDemographicFields("selectedHandles", selectedHandles);
+		}
 	}
 
 	private void setOperatorBiometrics(String registrationId, String registrationCategory,
