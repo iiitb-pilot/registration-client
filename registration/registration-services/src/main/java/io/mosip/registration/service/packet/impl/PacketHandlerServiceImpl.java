@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.mosip.commons.packet.dto.PacketInfo;
+import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
 import io.mosip.kernel.clientcrypto.util.ClientCryptoUtils;
 import io.mosip.kernel.core.util.CryptoUtil;
@@ -403,14 +404,22 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 	private void setDemographics(RegistrationDTO registrationDTO) throws RegBaseCheckedException {
 		LOGGER.debug(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding demographics to packet manager");
-		Map<String, Object> demographics = registrationDTO.getDemographics();
-
+		Map<String, Object> demographics =  registrationDTO.getDemographics();
+		String handleIdTypeValue = ((SimpleDto) ((ArrayList<?>) demographics.getOrDefault("handleIdTypeCategory", new ArrayList<>())).get(0)).getValue();
+		demographics.put("handleIdType",handleIdTypeValue);
+		List<String> handleFields = List.of("phoneHandle", "emailHandle", "passportHandle", "brnNumberHandle");
+		for (String field : handleFields) {
+			if (demographics.containsKey(field)) {
+				demographics.put("handleIdValue", demographics.get(field));
+				break; // Assuming only one value is needed
+			}
+		}
 		for (String fieldName : demographics.keySet()) {
 			LOGGER.info("Adding demographics for field : {}", fieldName);
 			switch (registrationDTO.getFlowType()) {
 				case UPDATE:
 					if (demographics.get(fieldName) != null && (registrationDTO.getUpdatableFields().contains(fieldName) ||
-							fieldName.equals("UIN")))
+							fieldName.equals("UIN") || fieldName.equals("handleIdType") || fieldName.equals("handleIdValue")))
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
 								registrationDTO.getProcessId().toUpperCase(), source);
 					break;
