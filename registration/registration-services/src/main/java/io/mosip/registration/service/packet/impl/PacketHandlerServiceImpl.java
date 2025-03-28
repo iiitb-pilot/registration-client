@@ -405,8 +405,10 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	private void setDemographics(RegistrationDTO registrationDTO) throws RegBaseCheckedException {
 		LOGGER.debug(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding demographics to packet manager");
 		Map<String, Object> demographics =  registrationDTO.getDemographics();
-		String handleIdTypeValue = ((SimpleDto) ((ArrayList<?>) demographics.getOrDefault("handleIdTypeCategory", new ArrayList<>())).get(0)).getValue();
-		demographics.put("handleIdType",handleIdTypeValue);
+		if(demographics.get("handleIdTypeCategory") != null) {
+			String handleIdTypeValue = ((SimpleDto) ((ArrayList<?>) demographics.getOrDefault("handleIdTypeCategory", new ArrayList<>())).get(0)).getValue();
+			demographics.put("handleIdType",handleIdTypeValue);
+		}
 		List<String> handleFields = List.of("phoneHandle", "emailHandle", "passportHandle", "brnNumberHandle");
 		for (String field : handleFields) {
 			if (demographics.containsKey(field)) {
