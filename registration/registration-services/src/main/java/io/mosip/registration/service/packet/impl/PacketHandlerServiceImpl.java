@@ -267,7 +267,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		return responseDTO;
 	}
 	private void updateSelectedHandles(RegistrationDTO registrationDTO) {
-		List<String> requiredFields = Arrays.asList("phone", "email", "passport", "brnNumber");
+		List<String> requiredFields = registrationDTO.getHandleFields();
 		List<String> selectedHandles = new ArrayList<>();
 
 		Map<String, Object> demographics = registrationDTO.getDemographics();
@@ -405,23 +405,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	private void setDemographics(RegistrationDTO registrationDTO) throws RegBaseCheckedException {
 		LOGGER.debug(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding demographics to packet manager");
 		Map<String, Object> demographics =  registrationDTO.getDemographics();
-		if(demographics.get("handleIdTypeCategory") != null) {
-			String handleIdTypeValue = ((SimpleDto) ((ArrayList<?>) demographics.getOrDefault("handleIdTypeCategory", new ArrayList<>())).get(0)).getValue();
-			demographics.put("handleIdType",handleIdTypeValue);
-		}
-		List<String> handleFields = List.of("phoneHandle", "emailHandle", "passportHandle", "brnNumberHandle");
-		for (String field : handleFields) {
-			if (demographics.containsKey(field)) {
-				demographics.put("handleIdValue", demographics.get(field));
-				break; // Assuming only one value is needed
-			}
-		}
 		for (String fieldName : demographics.keySet()) {
 			LOGGER.info("Adding demographics for field : {}", fieldName);
 			switch (registrationDTO.getFlowType()) {
 				case UPDATE:
 					if (demographics.get(fieldName) != null && (registrationDTO.getUpdatableFields().contains(fieldName) ||
-							fieldName.equals("UIN") || fieldName.equals("handleIdType") || fieldName.equals("handleIdValue")))
+							fieldName.equals("UIN")) || fieldName.equals("selectedHandles"))
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
 								registrationDTO.getProcessId().toUpperCase(), source);
 					break;

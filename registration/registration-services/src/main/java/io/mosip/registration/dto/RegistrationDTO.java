@@ -84,6 +84,7 @@ public class RegistrationDTO {
 	public Map<String, BlocklistedConsentDto> BLOCKLISTED_CHECK = new HashMap<>();
 
 	private List<String> configuredBlockListedWords = new ArrayList<>();
+	private List<String> handleFields = new ArrayList<>();
 
 	public void clearRegistrationDto() {
 		this.AGE_GROUPS.clear();
