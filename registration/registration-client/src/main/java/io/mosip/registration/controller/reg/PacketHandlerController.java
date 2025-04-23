@@ -734,7 +734,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 				"Auto Approval of Packet when EOD process disabled started");
 
 		registrationApprovalService.updateRegistration((getRegistrationDTOFromSession().getPacketId()),
-				RegistrationConstants.EMPTY, RegistrationClientStatusCode.APPROVED.getCode());
+				RegistrationConstants.EMPTY, RegistrationClientStatusCode.PENDING.getCode());
 
 		LOGGER.info(PACKET_HANDLER, APPLICATION_NAME, APPLICATION_ID,
 				"Auto Approval of Packet when EOD process disabled ended");
