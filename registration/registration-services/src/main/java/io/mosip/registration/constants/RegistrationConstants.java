@@ -1992,4 +1992,25 @@ public class RegistrationConstants {
 	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
 	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
 	public static final String IMAGING_DEVICE_TYPE = "mosip.registration.imagingDeviceType";
+	//doc preview
+	public static final String UNKNOWN_DOCUMENT="Unnamed_Document";
+	public static final String DOCUMENT_NAME_REGEX = "[^a-zA-Z0-9.-]";
+	public static final String DOCUMENT_REPLACEMENT = "_";
+	public static final String DOCUMENT_STORE="docs";
+	// Suffix used for scanned document pages
+	public static final String DOCUMENT_PAGE_SUFFIX = "Page";
+	// File extension for scanned image files
+	public static final String DOCUMENT_IMAGE_EXTENSION = ".png";
+	public static final String FORMAT_NAME="png";
+
+	// JavaScript global object reference
+	public static final String JS_GLOBAL_WINDOW = "window";
+	// JavaScript to delete existing bridgeFactory reference
+	public static final String JS_DELETE_BRIDGE_FACTORY = "delete window.bridgeFactory;";
+	// JavaScript to delete existing javaBridge reference
+	public static final String JS_DELETE_JAVA_BRIDGE = "delete window.javaBridge;";
+	// JavaScript to inject bridgeFactory as javaBridge
+	public static final String JS_INJECT_BRIDGE = "window.javaBridge = window.bridgeFactory;";
+	// Java-JavaScript bridge object name
+	public static final String BRIDGE_FACTORY_NAME = "bridgeFactory";
 }

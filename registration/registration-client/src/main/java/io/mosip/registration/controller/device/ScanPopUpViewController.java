@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,6 +118,10 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	@Value("${mosip.doc.stage.height:620}")
 	private int height;
+
+	private Map<String, List<BufferedImage>> scannedDocumentsMap = new HashMap<>();
+
+	private Map<String, Integer> documentPageCount = new HashMap<>();
 
 	private Thread streamer_thread = null;
 	private Stage popupStage;
@@ -359,6 +363,18 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 				save(rectangleSelection.getBounds(), documentScanController.getScannedPages().get(currentPage - 1));
 			}
 
+			String documentName = documentScanController.getSelectedDocumentName();
+			if (documentName == null || documentName.trim().isEmpty()) {
+				LOGGER.warn("Document name is empty or null, using default name.");
+				documentName = RegistrationConstants.UNKNOWN_DOCUMENT;
+			}
+
+			List<BufferedImage> scannedPages = documentScanController.getScannedPages();
+			for (BufferedImage page : scannedPages) {
+				saveScannedPage(documentName, page);
+			}
+
+			LOGGER.info("All scanned pages stored for document: " + documentName);
 			documentScanController.getFxControl().setData(documentScanController.getScannedPages());
 			documentScanController.getScannedPages().clear();
 			popupStage.close();
@@ -368,6 +384,24 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_ERROR));
 		}
 		showPagination();
+	}
+
+	public void saveScannedPage(String documentName, BufferedImage image) {
+		documentName = documentName.replaceAll(RegistrationConstants.DOCUMENT_NAME_REGEX, RegistrationConstants.DOCUMENT_REPLACEMENT); //Ensure valid filename
+
+		scannedDocumentsMap.computeIfAbsent(documentName, k -> new ArrayList<>()).add(image);
+		documentPageCount.put(documentName, scannedDocumentsMap.get(documentName).size());
+
+		LOGGER.info("Scanned page stored for document: " + documentName + " | Total Pages: " + documentPageCount.get(documentName));
+	}
+
+	public Map<String, List<BufferedImage>> getScannedDocumentsMap() {
+		return scannedDocumentsMap;
+	}
+
+	public void clearScannedDocuments() {
+		scannedDocumentsMap.clear();
+		documentPageCount.clear();
 	}
 
 	@FXML
