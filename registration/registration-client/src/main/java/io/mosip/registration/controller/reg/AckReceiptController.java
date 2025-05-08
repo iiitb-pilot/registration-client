@@ -3,12 +3,17 @@ package io.mosip.registration.controller.reg;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import io.mosip.registration.controller.docpreview.JavaBridge;
+import javafx.application.Platform;
+import netscape.javascript.JSObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -70,6 +75,12 @@ public class AckReceiptController extends BaseController implements Initializabl
 	@Autowired
 	private SendNotificationController sendNotificationController;
 
+	@Value("${packet.manager.account.name}")
+	private String packetManagerAccount;
+
+	@Value("${object.store.base.location}")
+	private String baseLocation;
+
 	public void setStringWriter(Writer stringWriter) {
 		this.stringWriter = stringWriter;
 	}
@@ -81,7 +92,7 @@ public class AckReceiptController extends BaseController implements Initializabl
 		setImage(newRegistrationBtnImgVw, RegistrationConstants.NEW_REGISTRATION_IMG);
 		setImage(printImgVw, RegistrationConstants.PRINTER_IMG);
 		setImage(SendEmailImageView, RegistrationConstants.SEND_EMAIL_IMG);
-		
+
 		// setImagesOnHover();
 		String notificationType = getValueFromApplicationContext(RegistrationConstants.MODE_OF_COMMUNICATION);
 		/*
@@ -91,12 +102,42 @@ public class AckReceiptController extends BaseController implements Initializabl
 		 * sendNotification.setVisible(false); } else {
 		 * sendNotification.setVisible(false); }
 		 */
+		try {
+			WebEngine engine = webView.getEngine();
+			// loads the generated HTML template content into webview
+			if (stringWriter != null) {
+				engine.loadContent(stringWriter.toString());
+			} else {
+				LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+						"StringWriter is null. Cannot load acknowledgement template.");
+				return;
+			}
 
-		WebEngine engine = webView.getEngine();
-		// loads the generated HTML template content into webview
-		engine.loadContent(stringWriter.toString());
-		LOGGER.info("REGISTRATION - UI - ACK-RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-				"Acknowledgement template has been loaded to webview");
+			String currentPacketId = PacketHandlerController.packetId;
+			String docsFolderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
+
+			engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+				if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+					Platform.runLater(() -> {
+						try {
+							JSObject window = (JSObject) engine.executeScript(RegistrationConstants.JS_GLOBAL_WINDOW);
+							JavaBridge bridge = new JavaBridge(currentPacketId, docsFolderPath);
+							window.setMember(RegistrationConstants.BRIDGE_FACTORY_NAME, bridge);
+							engine.executeScript(RegistrationConstants.JS_INJECT_BRIDGE);
+
+							LOGGER.info("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+									"JavaBridge injected into WebView with PacketID: {}", currentPacketId);
+						} catch (Exception e) {
+							LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+									"Failed to inject JavaBridge in AckReceiptController for PacketID: " + currentPacketId, e);
+						}
+					});
+				}
+			});
+		}catch (Exception e) {
+			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+					"Error initializing AckReceiptController", e);
+		}
 	}
 
 	/*
