@@ -124,17 +124,16 @@ public class AckReceiptController extends BaseController implements Initializabl
 							JavaBridge bridge = new JavaBridge(currentPacketId, docsFolderPath);
 							window.setMember(RegistrationConstants.BRIDGE_FACTORY_NAME, bridge);
 							engine.executeScript(RegistrationConstants.JS_INJECT_BRIDGE);
-
-							LOGGER.info("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-									"JavaBridge injected into WebView with PacketID: {}", currentPacketId);
+							engine.executeScript(RegistrationConstants.JS_SET_VAR_JAVA_BRIDGE);
+							engine.executeScript(RegistrationConstants.JS_BRIDGE_READY_TRUE);
+							LOGGER.info("JavaBridge injected into WebView with PacketID: {}", currentPacketId);
 						} catch (Exception e) {
-							LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
-									"Failed to inject JavaBridge in AckReceiptController for PacketID: " + currentPacketId, e);
+							LOGGER.error("Failed to inject JavaBridge in AckReceiptController for PacketID: " + currentPacketId, e);
 						}
 					});
 				}
 			});
-		}catch (Exception e) {
+		} catch (Exception e) {
 			LOGGER.error("REGISTRATION - UI - ACK_RECEIPT_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
 					"Error initializing AckReceiptController", e);
 		}

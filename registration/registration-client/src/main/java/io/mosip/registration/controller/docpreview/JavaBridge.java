@@ -1,5 +1,7 @@
 package io.mosip.registration.controller.docpreview;
 
+import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -16,8 +18,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import java.util.List;
 
 public class JavaBridge {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JavaBridge.class);
+    private static final Logger LOGGER = AppConfig.getLogger(JavaBridge.class);
 
     private String packetId;
     private String docsFolderPath;

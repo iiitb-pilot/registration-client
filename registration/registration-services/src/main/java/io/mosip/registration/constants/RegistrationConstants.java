@@ -2013,4 +2013,11 @@ public class RegistrationConstants {
 	public static final String JS_INJECT_BRIDGE = "window.javaBridge = window.bridgeFactory;";
 	// Java-JavaScript bridge object name
 	public static final String BRIDGE_FACTORY_NAME = "bridgeFactory";
+	// JavaScript to mark the bridge as not ready
+	public static final String JS_BRIDGE_READY_FALSE = "window.isBridgeReady = false;";
+	// JavaScript to set a fallback global variable for JavaBridge
+	public static final String JS_SET_VAR_JAVA_BRIDGE = "var javaBridge = window.bridgeFactory;";
+	// JavaScript to mark the bridge as ready
+	public static final String JS_BRIDGE_READY_TRUE = "window.isBridgeReady = true;";
+
 }

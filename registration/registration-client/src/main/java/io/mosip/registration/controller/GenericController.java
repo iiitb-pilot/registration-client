@@ -4,10 +4,14 @@ import static io.mosip.registration.constants.RegistrationConstants.EMPTY;
 import static io.mosip.registration.constants.RegistrationConstants.HASH;
 import static io.mosip.registration.constants.RegistrationConstants.REG_AUTH_PAGE;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.controller.device.ScanPopUpViewController;
+import io.mosip.registration.controller.reg.DocumentScanController;
+import io.mosip.registration.dto.packetmanager.DocumentDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -141,6 +145,12 @@ public class GenericController extends BaseController {
 
 	@Autowired
 	private PreRegistrationDataSyncService preRegistrationDataSyncService;
+
+	@Autowired
+	private DocumentScanController documentScanController;
+
+	@Autowired
+	private ScanPopUpViewController scanPopUpViewController;
 	
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
@@ -377,7 +387,19 @@ public class GenericController extends BaseController {
 						case "biometricsType":
 							break;
 						case "documentType":
-							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
+							DocumentDto doc = getRegistrationDTOFromSession().getDocuments().get(field.getId());
+							if (doc != null && doc.getDocument() != null) {
+								try {
+									documentScanController.loadDataIntoScannedPages(field.getId());
+									String docName = field.getId();
+									for (BufferedImage page : documentScanController.getScannedPages()) {
+										scanPopUpViewController.saveScannedPage(docName, page);
+									}
+									LOGGER.info("Cached pre-reg document for saving with name: {}", docName);
+								} catch (Exception e) {
+									LOGGER.error("Failed to cache pre-reg document for field: " + field.getId(), e);
+								}
+							}
 							break;
 						default:
 							fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()));
