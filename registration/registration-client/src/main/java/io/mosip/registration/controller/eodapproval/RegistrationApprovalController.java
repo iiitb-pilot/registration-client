@@ -370,11 +370,12 @@ public class RegistrationApprovalController extends BaseController implements In
 									// Clear any stale references before injecting a new bridge
 									engine.executeScript(RegistrationConstants.JS_DELETE_BRIDGE_FACTORY);
 									engine.executeScript(RegistrationConstants.JS_DELETE_JAVA_BRIDGE);
-
+									engine.executeScript(RegistrationConstants.JS_BRIDGE_READY_FALSE);
 									JavaBridge bridge = new JavaBridge(packetId, docsFolderPath);
 									window.setMember(RegistrationConstants.BRIDGE_FACTORY_NAME, bridge);
 									engine.executeScript(RegistrationConstants.JS_INJECT_BRIDGE);
-
+									engine.executeScript(RegistrationConstants.JS_SET_VAR_JAVA_BRIDGE);
+									engine.executeScript(RegistrationConstants.JS_BRIDGE_READY_TRUE);
 									LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 											"JavaBridge injected for PacketID: {}", packetId);
 								} catch (Exception e) {
