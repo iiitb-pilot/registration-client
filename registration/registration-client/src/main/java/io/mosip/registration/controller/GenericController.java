@@ -159,9 +159,19 @@ public class GenericController<uiFieldDTO> extends BaseController {
 		anchorPane.prefWidthProperty().bind(genericScreen.widthProperty());
 		anchorPane.prefHeightProperty().bind(genericScreen.heightProperty());
 		fields = getAllFields(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+		setHandleFields(registrationDTO, fields);
 		additionalInfoReqIdScreenOrder = null;
 	}
 
+	private void setHandleFields(RegistrationDTO registrationDTO, List<UiFieldDTO> fields) {
+		List<String> handleFields = new ArrayList<>();
+		for(UiFieldDTO uiFieldDTO : fields) {
+			if (uiFieldDTO.isHandle()) {
+				handleFields.add(uiFieldDTO.getId());
+			}
+		}
+		registrationDTO.setHandleFields(handleFields);
+	}
 
 	private void fillHierarchicalLevelsByLanguage() {
 		for(String langCode : getConfiguredLangCodes()) {

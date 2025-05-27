@@ -87,6 +87,7 @@ public class RegistrationDTO {
 	public Map<String, BlocklistedConsentDto> BLOCKLISTED_CHECK = new HashMap<>();
 
 	private List<String> configuredBlockListedWords = new ArrayList<>();
+	private List<String> handleFields = new ArrayList<>();
 
 	public void clearRegistrationDto() {
 		this.AGE_GROUPS.clear();
@@ -403,6 +404,17 @@ public class RegistrationDTO {
 
 	public void setSelectedLanguagesByApplicant(List<String> selectedLanguagesByApplicant) {
 		this.selectedLanguagesByApplicant = selectedLanguagesByApplicant;
+	}
+
+	public void addDemographicFields(@NonNull String fieldId, List<String> values) {
+		if (values != null && !values.isEmpty()) {
+			if (fieldId.equals("selectedHandles")) {
+				this.demographics.computeIfAbsent(fieldId, k -> new ArrayList<String>());
+				((List<String>) this.demographics.get(fieldId)).addAll(values);
+			} else {
+				this.demographics.put(fieldId, values);
+			}
+		}
 	}
 	
 }
