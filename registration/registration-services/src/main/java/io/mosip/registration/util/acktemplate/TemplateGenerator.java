@@ -95,7 +95,7 @@ public class TemplateGenerator extends BaseService {
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(TemplateGenerator.class);
 	private static final String APPLICATION_DATE_FORMAT_CONFIG = "mosip.registration.application_date_format";
-
+	private static final String APPLICATION_IMPORTANT_GUIDELINES = "mosip.registration.important_guidelines_";
 	@Autowired
 	private QrCodeGenerator<QrVersion> qrCodeGenerator;
 
@@ -399,7 +399,7 @@ public class TemplateGenerator extends BaseService {
 			templateValues.put(RegistrationConstants.TEMPLATE_REG_CENTER_LABEL, getLabel("registrationcenter"));
 			templateValues.put(RegistrationConstants.TEMPLATE_REG_CENTER, SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterName());
 			templateValues.put(RegistrationConstants.TEMPLATE_IMPORTANT_GUIDELINES, firstLanguageProperties.getString("importantguidelines"));
-
+			setUpImportantGuidelines(templateValues);
 			templateValues.put(RegistrationConstants.TEMPLATE_DEMO_INFO, getLabel("demographicInformation"));
 			templateValues.put(RegistrationConstants.TEMPLATE_DOCUMENTS_LABEL, getLabel("documents"));
 			templateValues.put(RegistrationConstants.TEMPLATE_BIOMETRICS_LABEL, getLabel("biometricsHeading"));
@@ -534,6 +534,14 @@ public class TemplateGenerator extends BaseService {
 			throw  new RegBaseCheckedException(RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, exception.getMessage());
 		}
 	}
+
+	private void setUpImportantGuidelines(Map<String, Object> templateValues) {
+		String guidelines = ApplicationContext.getStringValueFromApplicationMap(APPLICATION_IMPORTANT_GUIDELINES + ApplicationContext.applicationLanguage());
+		String[] importantGuidelines = guidelines!=null ?
+				guidelines.split(RegistrationConstants.DELIMITER) : new String[]{};
+		templateValues.put(RegistrationConstants.TEMPLATE_GUIDELINES, Arrays.asList(importantGuidelines));
+	}
+
 
 	@SuppressWarnings("unchecked")
 	private String getValue(Object fieldValue, String lang) {
