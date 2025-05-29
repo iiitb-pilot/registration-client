@@ -451,7 +451,6 @@ public class GenericController<uiFieldDTO> extends BaseController {
 						case "biometricsType":
 							break;
 						case "documentType":
-							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
 							DocumentDto doc = getRegistrationDTOFromSession().getDocuments().get(field.getId());
 							if (doc != null && doc.getDocument() != null) {
 								try {
@@ -465,6 +464,7 @@ public class GenericController<uiFieldDTO> extends BaseController {
 									LOGGER.error("Failed to cache pre-reg document for field: " + field.getId(), e);
 								}
 							}
+							break;
 						default:
 							var demographicsCopy = (Map<String, Object>)SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA_DEMO);
 							fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()) != null ? getRegistrationDTOFromSession().getDemographics().get(field.getId()) : demographicsCopy.get(field.getId()));
