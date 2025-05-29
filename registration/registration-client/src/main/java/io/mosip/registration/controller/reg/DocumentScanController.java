@@ -118,6 +118,8 @@ public class DocumentScanController extends BaseController {
 
 	private FxControl fxControl;
 
+	private String selectedDocumentName;
+
 	public void scan(Stage popupStage) {
 		try {
 			scanPopUpViewController.getScanningMsg().setVisible(true);
@@ -243,10 +245,10 @@ public class DocumentScanController extends BaseController {
 	}
 
 
-	public void scanDocument(String fieldId, FxControl fxControl, boolean isPreviewOnly) {
+	public void scanDocument(String fieldId, FxControl fxControl, boolean isPreviewOnly, String documentName) {
 		try {
 			this.fxControl = fxControl;
-
+			this.selectedDocumentName=documentName;
 			loadDataIntoScannedPages(fieldId);
 
 			initializeAndShowScanPopup(isPreviewOnly);
@@ -260,6 +262,10 @@ public class DocumentScanController extends BaseController {
 		}
 
 		generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_DOCUMENT_ERROR));
+	}
+
+	public String getSelectedDocumentName() {
+		return selectedDocumentName != null ? selectedDocumentName : RegistrationConstants.UNKNOWN_DOCUMENT;
 	}
 
 	public String getSelectedScanDeviceName() {

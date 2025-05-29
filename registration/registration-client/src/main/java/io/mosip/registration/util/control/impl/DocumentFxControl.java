@@ -67,6 +67,8 @@ public class DocumentFxControl extends FxControl {
 
 	private String CLEAR_ID = "clear";
 
+	private String selectedDocumentName;
+
 	public DocumentFxControl() {
 		org.springframework.context.ApplicationContext applicationContext = ClientApplication.getApplicationContext();
 		auditFactory = applicationContext.getBean(AuditManagerService.class);
@@ -198,7 +200,9 @@ public class DocumentFxControl extends FxControl {
 			return;
 		}
 
-		documentScanController.scanDocument(uiFieldDTO.getId(), this,	isPreviewOnly);
+		String documentName = getSelectedDocumentName();
+		LOGGER.info("Scanning document: " + documentName);
+		documentScanController.scanDocument(uiFieldDTO.getId(), this,	isPreviewOnly,documentName);
 	}
 
 	private VBox createDocRef(String id) {
@@ -279,6 +283,8 @@ public class DocumentFxControl extends FxControl {
 
 		comboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
 			if (comboBox.getSelectionModel().getSelectedItem() != null) {
+				selectedDocumentName = uiFieldDTO.getId();
+				LOGGER.info("Selected Field Name (used for saving documents): " + selectedDocumentName);
 				String selectedCode = comboBox.getSelectionModel().getSelectedItem().getCode();
 
 				if(getRegistrationDTo().getDocuments().containsKey(uiFieldDTO.getId()) &&
@@ -300,6 +306,8 @@ public class DocumentFxControl extends FxControl {
 				messageLabel.setText(String.join(RegistrationConstants.SLASH, toolTipTextList));
 				fieldTitle.setVisible(true);
 			} else {
+				selectedDocumentName = null;
+				LOGGER.warn("No document selected from dropdown.");
 				Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
 				messageLabel.setText(RegistrationConstants.EMPTY);
 			}
@@ -331,6 +339,10 @@ public class DocumentFxControl extends FxControl {
 		simpleTypeVBox.getChildren().add(messageLabel);
 
 		return simpleTypeVBox;
+	}
+
+	public String getSelectedDocumentName() {
+		return selectedDocumentName != null ? selectedDocumentName : RegistrationConstants.UNKNOWN_DOCUMENT;
 	}
 
 	@Override

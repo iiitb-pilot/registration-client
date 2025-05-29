@@ -9,12 +9,15 @@ import io.mosip.registration.constants.*;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.auth.AuthenticationController;
+import io.mosip.registration.controller.device.ScanPopUpViewController;
+import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationPreviewController;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.UiScreenDTO;
@@ -48,6 +51,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -124,6 +128,12 @@ public class GenericController<uiFieldDTO> extends BaseController {
 
 	@Autowired
 	private QrCodePopUpViewController qrCodePopUpViewController;
+
+	@Autowired
+	private DocumentScanController documentScanController;
+
+	@Autowired
+	private ScanPopUpViewController scanPopUpViewController;
 
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
@@ -442,7 +452,19 @@ public class GenericController<uiFieldDTO> extends BaseController {
 							break;
 						case "documentType":
 							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
-							break;
+							DocumentDto doc = getRegistrationDTOFromSession().getDocuments().get(field.getId());
+							if (doc != null && doc.getDocument() != null) {
+								try {
+									documentScanController.loadDataIntoScannedPages(field.getId());
+									String docName = field.getId();
+									for (BufferedImage page : documentScanController.getScannedPages()) {
+										scanPopUpViewController.saveScannedPage(docName, page);
+									}
+									LOGGER.info("Cached pre-reg document for saving with name: {}", docName);
+								} catch (Exception e) {
+									LOGGER.error("Failed to cache pre-reg document for field: " + field.getId(), e);
+								}
+							}
 						default:
 							var demographicsCopy = (Map<String, Object>)SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA_DEMO);
 							fxControl.selectAndSet(getRegistrationDTOFromSession().getDemographics().get(field.getId()) != null ? getRegistrationDTOFromSession().getDemographics().get(field.getId()) : demographicsCopy.get(field.getId()));
