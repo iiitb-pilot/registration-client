@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import io.mosip.registration.controller.docpreview.JavaBridge;
 import javafx.application.Platform;
+import javafx.scene.control.*;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,12 +56,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -160,6 +155,9 @@ public class RegistrationApprovalController extends BaseController implements In
 	/** The image anchor pane. */
 	@FXML
 	private GridPane imageAnchorPane;
+
+	@FXML
+	private Button testButton;
 
 	/** The map list. */
 	private List<Map<String, String>> approvalmapList = null;
@@ -669,6 +667,32 @@ public class RegistrationApprovalController extends BaseController implements In
 		}
 		return primarystage;
 	}
+
+	@FXML
+	private void onTestButtonClicked(ActionEvent event) {
+		// Display a version upgrade message
+		showInfoMessage("Registration client has been upgraded to version " + getAppVersion() + ".");
+	}
+
+	private void showInfoMessage(String message) {
+		Platform.runLater(() -> {
+			Alert alert = new Alert(Alert.AlertType.INFORMATION);
+			alert.setTitle("Update Info");
+			alert.setHeaderText(null);
+			alert.setContentText(message);
+			alert.showAndWait();
+		});
+	}
+
+	private String getAppVersion() {
+		Package pkg = getClass().getPackage();
+		if (pkg != null && pkg.getImplementationVersion() != null) {
+			return pkg.getImplementationVersion();
+		}
+		return "unknown";
+	}
+
+
 
 	/*
 	 * (non-Javadoc)
