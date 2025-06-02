@@ -144,13 +144,6 @@
                    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
                        <children>
                            <Label styleClass="mainHeader" text="%pendingapproval" />
-                           <Region fx:id="spacer" prefWidth="120" />
-
-                           <Button fx:id="testButton"
-                                   text="Test Version"
-                                   onAction="#onTestButtonClicked"
-                                   visible="true"
-                                   styleClass="contiuneButton" />
                        </children>
                    </HBox>
                   <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="30.0" GridPane.columnIndex="2">

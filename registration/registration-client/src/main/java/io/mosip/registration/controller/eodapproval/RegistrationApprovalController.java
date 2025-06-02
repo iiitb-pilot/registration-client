@@ -156,9 +156,6 @@ public class RegistrationApprovalController extends BaseController implements In
 	@FXML
 	private GridPane imageAnchorPane;
 
-	@FXML
-	private Button testButton;
-
 	/** The map list. */
 	private List<Map<String, String>> approvalmapList = null;
 
@@ -666,30 +663,6 @@ public class RegistrationApprovalController extends BaseController implements In
 			throw new RegBaseUncheckedException(REG_UI_LOGIN_LOADER_EXCEPTION, runtimeException.getMessage());
 		}
 		return primarystage;
-	}
-
-	@FXML
-	private void onTestButtonClicked(ActionEvent event) {
-		// Display a version upgrade message
-		showInfoMessage("Registration client has been upgraded to version " + getAppVersion() + ".");
-	}
-
-	private void showInfoMessage(String message) {
-		Platform.runLater(() -> {
-			Alert alert = new Alert(Alert.AlertType.INFORMATION);
-			alert.setTitle("Update Info");
-			alert.setHeaderText(null);
-			alert.setContentText(message);
-			alert.showAndWait();
-		});
-	}
-
-	private String getAppVersion() {
-		Package pkg = getClass().getPackage();
-		if (pkg != null && pkg.getImplementationVersion() != null) {
-			return pkg.getImplementationVersion();
-		}
-		return "unknown";
 	}
 
 
