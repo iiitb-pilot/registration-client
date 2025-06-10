@@ -196,7 +196,7 @@ public class GenericController<uiFieldDTO> extends BaseController {
 
 	private HBox getPreRegistrationFetchComponent() {
 		String langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
-
+		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		HBox hBox = new HBox();
 		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.setSpacing(20);
@@ -214,8 +214,17 @@ public class GenericController<uiFieldDTO> extends BaseController {
 		});
 		String labelText = String.join(RegistrationConstants.SLASH, labels);
 		label.setText(labelText);
-		label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
-		label.setPadding(new Insets(0, 0, 0, 55));
+		if (selectedLanguages.size() > 3) {
+			label.getStyleClass().add("preRegIdLabel");
+			label.setPadding(new Insets(0, 0, 0, 10));
+		} else if(selectedLanguages.size()==3){
+			label.getStyleClass().add("preRegIdLabelThreeLanguages");
+			label.setPadding(new Insets(0, 0, 0, 55));
+		}
+		else {
+			label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
+			label.setPadding(new Insets(0, 0, 0, 55));
+		}
 		hBox.getChildren().add(label);
 
 		HBox innerHBox = new HBox();
@@ -225,12 +234,14 @@ public class GenericController<uiFieldDTO> extends BaseController {
 
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
-		textField.getStyleClass().add(TEXTFIELD_CLASS);
+		String textFieldStyle = selectedLanguages.size() > 2 ? "preregPlaceHolder" : TEXTFIELD_CLASS;
+		textField.getStyleClass().add(textFieldStyle);
 		this.registrationNumberTextField = textField;
 
 		Button button = new Button();
 		button.setId("fetchBtn");
-		button.getStyleClass().add("demoGraphicPaneContentButton");
+		String fetchButtonStyle = selectedLanguages.size() > 2 ? "fetchButton" : "demoGraphicPaneContentButton";
+		button.getStyleClass().add(fetchButtonStyle);
 		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
@@ -244,7 +255,8 @@ public class GenericController<uiFieldDTO> extends BaseController {
 			scanQRbutton.setId("scanQRBtn");
 			scanQRbutton.setGraphic(new ImageView(
 					new Image(this.getClass().getResourceAsStream(RegistrationConstants.QR_CODE), 25, 25, true, true)));
-			scanQRbutton.getStyleClass().add("demoGraphicPaneContentButton");
+			String qrButtonStyle = selectedLanguages.size() > 2 ? "qrButton" : "demoGraphicPaneContentButton";
+			scanQRbutton.getStyleClass().add(qrButtonStyle);
 			scanQRbutton.setOnAction(event -> {
 				executeQRCodeScan();
 			});
