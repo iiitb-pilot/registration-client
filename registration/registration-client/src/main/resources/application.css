@@ -682,6 +682,13 @@ Working on new Css by taleev
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-border-color: #005baa;
 }
+.preRegPlaceHolder {
+	-fx-pref-height: 35.0px;
+	-fx-pref-width: 180.0px;
+	-fx-translate-x: 30px;
+	-fx-border-width: 0.0 0.0 1.0 0.0;
+	-fx-border-color: #005baa;
+}
 
 .searchBoxTextStyle {
 	-fx-pref-height: 30.0px;
@@ -801,6 +808,23 @@ Working on new Css by taleev
 	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
 	-fx-font-size: 1.1em;
 }
+.qrButton {
+	-fx-border-width: 1.0 1.0 1.0 1.0;
+	-fx-border-color: #005baa;
+	-fx-background-color: #FFFFFF;
+	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
+	-fx-font-size: 1.1em;
+	-fx-translate-x: 25px;
+}
+.fetchButton {
+	-fx-border-width: 1.0 1.0 1.0 1.0;
+	-fx-border-color: #005baa;
+	-fx-background-color: #FFFFFF;
+	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
+	-fx-font-size: 1.1em;
+	-fx-pref-width: 134px;
+	-fx-translate-x: 15px;
+}
 
 .demoGraphicPaneContentButton:hover {
 	-fx-background-color: #004887;
@@ -809,6 +833,17 @@ Working on new Css by taleev
 }
 
 .demoGraphicPaneContentButton:pressed {
+	-fx-background-color: #004887;
+	-fx-border-color: #004887;
+	-fx-text-fill: #FFFFFF;
+}
+.fetchButton:hover {
+	-fx-background-color: #004887;
+	-fx-border-color: #004887;
+	-fx-text-fill: #FFFFFF;
+}
+
+.fetchButton:pressed {
 	-fx-background-color: #004887;
 	-fx-border-color: #004887;
 	-fx-text-fill: #FFFFFF;
@@ -2723,6 +2758,22 @@ Working on new Css by taleev
 	-fx-text-fill: #020F59;
 	-fx-font-size: 1.3em;
 	-fx-font-weight: 900;
+}
+.preRegIdLabel {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #020F59;
+	-fx-font-size: 1.1em;
+	-fx-font-weight: 900;
+	-fx-pref-width: 600px;
+}
+.preRegIdLabelThreeLanguages {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #020F59;
+	-fx-font-size: 1.3em;
+	-fx-font-weight: 900;
+	-fx-pref-width: 600px;
 }
 
 .demoGraphicCustomField{
