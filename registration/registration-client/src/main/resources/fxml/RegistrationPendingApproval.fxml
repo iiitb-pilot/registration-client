@@ -141,11 +141,11 @@
                         <Insets left="25.0" />
                      </padding>
                   </HBox>
-                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
-                     <children>
-                        <Label styleClass="mainHeader" text="%pendingapproval" />
-                     </children>
-                  </HBox>
+                   <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
+                       <children>
+                           <Label styleClass="mainHeader" text="%pendingapproval" />
+                       </children>
+                   </HBox>
                   <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="30.0" GridPane.columnIndex="2">
                      <children>
                         <ToggleButton fx:id="rejectionBtn" mnemonicParsing="false" onAction="#updateStatus" styleClass="rejectButton" text="%reject">

@@ -5,19 +5,18 @@ import static io.mosip.registration.constants.RegistrationConstants.ACKNOWLEDGEM
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.mosip.registration.controller.device.ScanPopUpViewController;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -76,6 +75,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import lombok.NonNull;
+
+import javax.imageio.ImageIO;
 
 /**
  * Class for Registration Packet operations
@@ -234,6 +235,17 @@ public class PacketHandlerController extends BaseController implements Initializ
 	
 	@Autowired
 	private LanguageSelectionController languageSelectionController;
+
+	@Autowired
+	private ScanPopUpViewController scanPopUpViewController;
+
+	public static String packetId;
+
+	@Value("${object.store.base.location}")
+	private String baseLocation;
+
+	@Value("${packet.manager.account.name}")
+	private String packetManagerAccount;
 
 	@SuppressWarnings("unchecked")
 	public void setLastUpdateTime() {
@@ -625,7 +637,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				packetHandlerService.createAcknowledgmentReceipt(registrationDTO.getPacketId(), ackInBytes,
 						RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
-
+				packetId = registrationDTO.getPacketId();
+				saveScannedDocumentsWithPacketId(packetId);
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
 				String supervisorApproval = getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG);
 				if (supervisorApproval != null && !getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG)
@@ -655,6 +668,48 @@ public class PacketHandlerController extends BaseController implements Initializ
 			}
 		}
 		return response;
+	}
+
+	public void saveScannedDocumentsWithPacketId(String packetId) {
+		if (baseLocation == null || packetManagerAccount == null) {
+			LOGGER.error("Base location or Packet Manager Account is null. Cannot save scanned documents.");
+			return;
+		}
+
+		String folderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
+		File directory = new File(folderPath);
+
+		if (!directory.exists() && !directory.mkdirs()) {
+			LOGGER.error("Failed to create folder: " + folderPath);
+			return;
+		}
+
+		Map<String, List<BufferedImage>> scannedDocuments = scanPopUpViewController.getScannedDocumentsMap();
+
+		if (scannedDocuments.isEmpty()) {
+			LOGGER.warn("No scanned documents found to save for Packet ID: " + packetId);
+			return;
+		}
+
+		try {
+			for (Map.Entry<String, List<BufferedImage>> entry : scannedDocuments.entrySet()) {
+				String documentName = entry.getKey();
+				List<BufferedImage> pages = entry.getValue();
+
+				for (int i = 0; i < pages.size(); i++) {
+					String newFileName = packetId + RegistrationConstants.DOCUMENT_REPLACEMENT + documentName + RegistrationConstants.DOCUMENT_REPLACEMENT+RegistrationConstants.DOCUMENT_PAGE_SUFFIX + (i + 1) + RegistrationConstants.DOCUMENT_IMAGE_EXTENSION;
+					File outputFile = new File(folderPath + File.separator + newFileName);
+
+					ImageIO.write(pages.get(i), RegistrationConstants.FORMAT_NAME, outputFile);
+					LOGGER.info("Saved scanned document page: " + outputFile.getAbsolutePath());
+				}
+			}
+
+			scanPopUpViewController.clearScannedDocuments();
+
+		} catch (IOException e) {
+			LOGGER.error("Error saving scanned documents with Packet ID", e);
+		}
 	}
 
 

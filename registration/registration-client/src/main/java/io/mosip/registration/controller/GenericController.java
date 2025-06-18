@@ -9,12 +9,15 @@ import io.mosip.registration.constants.*;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.controller.auth.AuthenticationController;
+import io.mosip.registration.controller.device.ScanPopUpViewController;
+import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationPreviewController;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
+import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.UiScreenDTO;
@@ -48,6 +51,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -125,6 +129,12 @@ public class GenericController<uiFieldDTO> extends BaseController {
 	@Autowired
 	private QrCodePopUpViewController qrCodePopUpViewController;
 
+	@Autowired
+	private DocumentScanController documentScanController;
+
+	@Autowired
+	private ScanPopUpViewController scanPopUpViewController;
+
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
 	private Stage keyboardStage;
@@ -159,9 +169,19 @@ public class GenericController<uiFieldDTO> extends BaseController {
 		anchorPane.prefWidthProperty().bind(genericScreen.widthProperty());
 		anchorPane.prefHeightProperty().bind(genericScreen.heightProperty());
 		fields = getAllFields(registrationDTO.getProcessId(), registrationDTO.getIdSchemaVersion());
+		setHandleFields(registrationDTO, fields);
 		additionalInfoReqIdScreenOrder = null;
 	}
 
+	private void setHandleFields(RegistrationDTO registrationDTO, List<UiFieldDTO> fields) {
+		List<String> handleFields = new ArrayList<>();
+		for(UiFieldDTO uiFieldDTO : fields) {
+			if (uiFieldDTO.isHandle()) {
+				handleFields.add(uiFieldDTO.getId());
+			}
+		}
+		registrationDTO.setHandleFields(handleFields);
+	}
 
 	private void fillHierarchicalLevelsByLanguage() {
 		for(String langCode : getConfiguredLangCodes()) {
@@ -176,7 +196,7 @@ public class GenericController<uiFieldDTO> extends BaseController {
 
 	private HBox getPreRegistrationFetchComponent() {
 		String langCode = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().get(0);
-
+		List<String> selectedLanguages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
 		HBox hBox = new HBox();
 		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.setSpacing(20);
@@ -194,8 +214,17 @@ public class GenericController<uiFieldDTO> extends BaseController {
 		});
 		String labelText = String.join(RegistrationConstants.SLASH, labels);
 		label.setText(labelText);
-		label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
-		label.setPadding(new Insets(0, 0, 0, 55));
+		if (selectedLanguages.size() > 3) {
+			label.getStyleClass().add("preRegIdLabel");
+			label.setPadding(new Insets(0, 0, 0, 10));
+		} else if(selectedLanguages.size()==3){
+			label.getStyleClass().add("preRegIdLabelThreeLanguages");
+			label.setPadding(new Insets(0, 0, 0, 55));
+		}
+		else {
+			label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
+			label.setPadding(new Insets(0, 0, 0, 55));
+		}
 		hBox.getChildren().add(label);
 
 		HBox innerHBox = new HBox();
@@ -205,12 +234,14 @@ public class GenericController<uiFieldDTO> extends BaseController {
 
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
-		textField.getStyleClass().add(TEXTFIELD_CLASS);
+		String textFieldStyle = selectedLanguages.size() > 2 ? "preRegPlaceHolder" : TEXTFIELD_CLASS;
+		textField.getStyleClass().add(textFieldStyle);
 		this.registrationNumberTextField = textField;
 
 		Button button = new Button();
 		button.setId("fetchBtn");
-		button.getStyleClass().add("demoGraphicPaneContentButton");
+		String fetchButtonStyle = selectedLanguages.size() > 2 ? "fetchButton" : "demoGraphicPaneContentButton";
+		button.getStyleClass().add(fetchButtonStyle);
 		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
 
@@ -224,7 +255,8 @@ public class GenericController<uiFieldDTO> extends BaseController {
 			scanQRbutton.setId("scanQRBtn");
 			scanQRbutton.setGraphic(new ImageView(
 					new Image(this.getClass().getResourceAsStream(RegistrationConstants.QR_CODE), 25, 25, true, true)));
-			scanQRbutton.getStyleClass().add("demoGraphicPaneContentButton");
+			String qrButtonStyle = selectedLanguages.size() > 2 ? "qrButton" : "demoGraphicPaneContentButton";
+			scanQRbutton.getStyleClass().add(qrButtonStyle);
 			scanQRbutton.setOnAction(event -> {
 				executeQRCodeScan();
 			});
@@ -431,7 +463,19 @@ public class GenericController<uiFieldDTO> extends BaseController {
 						case "biometricsType":
 							break;
 						case "documentType":
-							fxControl.selectAndSet(getRegistrationDTOFromSession().getDocuments().get(field.getId()));
+							DocumentDto doc = getRegistrationDTOFromSession().getDocuments().get(field.getId());
+							if (doc != null && doc.getDocument() != null) {
+								try {
+									documentScanController.loadDataIntoScannedPages(field.getId());
+									String docName = field.getId();
+									for (BufferedImage page : documentScanController.getScannedPages()) {
+										scanPopUpViewController.saveScannedPage(docName, page);
+									}
+									LOGGER.info("Cached pre-reg document for saving with name: {}", docName);
+								} catch (Exception e) {
+									LOGGER.error("Failed to cache pre-reg document for field: " + field.getId(), e);
+								}
+							}
 							break;
 						default:
 							var demographicsCopy = (Map<String, Object>)SessionContext.map().get(RegistrationConstants.REGISTRATION_DATA_DEMO);

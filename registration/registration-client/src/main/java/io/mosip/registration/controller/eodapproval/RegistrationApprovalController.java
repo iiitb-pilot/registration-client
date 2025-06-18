@@ -23,7 +23,13 @@ import java.util.ResourceBundle;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
+import io.mosip.registration.controller.docpreview.JavaBridge;
+import javafx.application.Platform;
+import javafx.scene.control.*;
+import javafx.scene.web.WebEngine;
+import netscape.javascript.JSObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -50,12 +56,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -182,6 +182,12 @@ public class RegistrationApprovalController extends BaseController implements In
 	private ObservableList<RegistrationApprovalVO> observableList;
 
 	private Map<String, Integer> packetIds = new HashMap<>();
+
+	@Value("${packet.manager.account.name}")
+	private String packetManagerAccount;
+
+	@Value("${object.store.base.location}")
+	private String baseLocation;
 
 	/**
 	 * @return the primaryStage
@@ -329,26 +335,65 @@ public class RegistrationApprovalController extends BaseController implements In
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying the Acknowledgement form started");
 		if (table.getSelectionModel().getSelectedItem() != null) {
+			try {
+				if (!approvalmapList.isEmpty()) {
+					authenticateBtn.setDisable(false);
+				}
+				webView.getEngine().loadContent(RegistrationConstants.EMPTY);
 
-			if (!approvalmapList.isEmpty()) {
-				authenticateBtn.setDisable(false);
-			}
+				approvalBtn.setVisible(true);
+				rejectionBtn.setVisible(true);
+				imageAnchorPane.setVisible(true);
 
-			webView.getEngine().loadContent(RegistrationConstants.EMPTY);
-
-			approvalBtn.setVisible(true);
-			rejectionBtn.setVisible(true);
-			imageAnchorPane.setVisible(true);
-
-			try{
-				String acknowledgementContent = packetHandlerService.getAcknowledgmentReceipt(table.getSelectionModel().getSelectedItem().getPacketId(),
+				String packetId = table.getSelectionModel().getSelectedItem().getPacketId();
+				String acknowledgementContent = packetHandlerService.getAcknowledgmentReceipt(
+						packetId,
 						table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath());
-				webView.getEngine().loadContent(acknowledgementContent);
-			} catch (RegBaseCheckedException | io.mosip.kernel.core.exception.IOException ex) {
-				LOGGER.error("REGSITRATION_ACKNOWLEDGEMNT_PAGE_LOADING_FAILED", ex);
-			}
 
-		}
+				if (acknowledgementContent != null && !acknowledgementContent.isEmpty()) {
+					WebEngine engine = webView.getEngine();
+					engine.loadContent(acknowledgementContent);
+
+					String docsFolderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
+
+					engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+						if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+							Platform.runLater(() -> {
+								try {
+									JSObject window = (JSObject) engine.executeScript(RegistrationConstants.JS_GLOBAL_WINDOW);
+
+									// Clear any stale references before injecting a new bridge
+									engine.executeScript(RegistrationConstants.JS_DELETE_BRIDGE_FACTORY);
+									engine.executeScript(RegistrationConstants.JS_DELETE_JAVA_BRIDGE);
+
+									JavaBridge bridge = new JavaBridge(packetId, docsFolderPath);
+									window.setMember(RegistrationConstants.BRIDGE_FACTORY_NAME, bridge);
+									engine.executeScript(RegistrationConstants.JS_INJECT_BRIDGE);
+
+									LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
+											"JavaBridge injected for PacketID: {}", packetId);
+								} catch (Exception e) {
+									LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
+											"Failed to inject JavaBridge in viewAck for PacketID: " + packetId, e);
+								}
+							});
+						}
+					});
+
+					LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
+							"Acknowledgement template loaded for PacketID: {}", packetId);
+				} else {
+					LOGGER.warn(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
+							"Acknowledgement content is empty for PacketID: {}", packetId);
+				}
+			} catch (Exception ex) {
+				LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
+						"Error displaying the acknowledgement form", ex);
+			}
+		}else {
+		LOGGER.warn(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
+				"No item selected in table to view acknowledgement");
+	    }
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying the Acknowledgement form completed");
 	}
@@ -620,6 +665,8 @@ public class RegistrationApprovalController extends BaseController implements In
 		return primarystage;
 	}
 
+
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -636,6 +683,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				registrationApprovalService.updateRegistrationWithPacketId(map.get(RegistrationConstants.PACKET_ID),
 						map.get(RegistrationConstants.STATUSCOMMENT), map.get(RegistrationConstants.STATUSCODE));
 				regIds.add(map.get(RegistrationConstants.REGISTRATIONID));
+				deleteScannedImages(map.get(RegistrationConstants.PACKET_ID));
 			}
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTH_APPROVAL_SUCCESS_MSG));
 			actionCounter = 0;
@@ -669,6 +717,32 @@ public class RegistrationApprovalController extends BaseController implements In
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Updation of registration according to status ended");
 	}
+
+	public void deleteScannedImages(String packetId) {
+		String folderPath = baseLocation + File.separator + packetManagerAccount + File.separator+  RegistrationConstants.DOCUMENT_STORE;
+		File directory = new File(folderPath);
+
+		if (!directory.exists()) {
+			LOGGER.warn("Folder does not exist: " + folderPath);
+			return;
+		}
+
+		File[] filesToDelete = directory.listFiles((dir, name) -> name.startsWith(packetId) && name.endsWith(RegistrationConstants.DOCUMENT_IMAGE_EXTENSION));
+
+		if (filesToDelete == null || filesToDelete.length == 0) {
+			LOGGER.info("No scanned documents found for deletion with Packet ID: " + packetId);
+			return;
+		}
+
+		for (File file : filesToDelete) {
+			if (file.delete()) {
+				LOGGER.info("Deleted scanned document: " + file.getName());
+			} else {
+				LOGGER.error("Failed to delete scanned document: " + file.getName());
+			}
+		}
+	}
+
 
 
 	/**

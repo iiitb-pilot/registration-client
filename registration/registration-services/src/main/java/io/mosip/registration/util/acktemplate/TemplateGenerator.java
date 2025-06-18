@@ -353,7 +353,7 @@ public class TemplateGenerator extends BaseService {
 
 	private Map<String, Object> getDemographicData(RegistrationDTO registration, UiFieldDTO field) {
 		Map<String, Object> data = null;
-		if("UIN".equalsIgnoreCase(field.getId()) || "IDSchemaVersion".equalsIgnoreCase(field.getId()))
+		if("UIN".equalsIgnoreCase(field.getId()) || "IDSchemaVersion".equalsIgnoreCase(field.getId()) || "selectedHandles".equals(field.getId()))
 			return null;
 
 		String value = getValue(registration.getDemographics().get(field.getId()));
@@ -394,7 +394,7 @@ public class TemplateGenerator extends BaseService {
 			templateValues.put(RegistrationConstants.TEMPLATE_RO_NAME, getValue(registration.getOsiDataDTO().getOperatorID()));
 			templateValues.put(RegistrationConstants.TEMPLATE_REG_CENTER_LABEL, getLabel("registrationcenter"));
 			templateValues.put(RegistrationConstants.TEMPLATE_REG_CENTER, SessionContext.userContext().getRegistrationCenterDetailDTO().getRegistrationCenterName());
-			templateValues.put(RegistrationConstants.TEMPLATE_IMPORTANT_GUIDELINES, firstLanguageProperties.getString("importantguidelines"));
+			templateValues.put(RegistrationConstants.TEMPLATE_IMPORTANT_GUIDELINES, getLabel("importantguidelines"));
 			setUpImportantGuidelines(templateValues);
 
 			templateValues.put(RegistrationConstants.TEMPLATE_DEMO_INFO, getLabel("demographicInformation"));
@@ -533,10 +533,18 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private void setUpImportantGuidelines(Map<String, Object> templateValues) {
-		String guidelines = ApplicationContext.getStringValueFromApplicationMap(APPLICATION_IMPORTANT_GUIDELINES + ApplicationContext.applicationLanguage());
-		String[] importantGuidelines = guidelines!=null ?
-				guidelines.split(RegistrationConstants.DELIMITER) : new String[]{};
-		templateValues.put(RegistrationConstants.TEMPLATE_GUIDELINES, Arrays.asList(importantGuidelines));
+		List<String> languages = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant();
+		List<String> allGuidelines = new ArrayList<>();
+
+		for (String lang : languages) {
+			String guidelines = ApplicationContext.getStringValueFromApplicationMap(
+					APPLICATION_IMPORTANT_GUIDELINES + lang);
+			if (guidelines != null) {
+				String[] split = guidelines.split(RegistrationConstants.DELIMITER);
+				allGuidelines.addAll(Arrays.asList(split));
+			}
+		}
+		templateValues.put(RegistrationConstants.TEMPLATE_GUIDELINES, allGuidelines);
 	}
 
 	@SuppressWarnings("unchecked")

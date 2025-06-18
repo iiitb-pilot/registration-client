@@ -194,6 +194,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		
 		Map<String, String> metaInfoMap = new LinkedHashMap<>();
 		try {
+			updateSelectedHandles(registrationDTO);
 			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
 			setDemographics(registrationDTO);
 			setDocuments(registrationDTO, metaInfoMap);
@@ -394,7 +395,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			switch (registrationDTO.getFlowType()) {
 				case UPDATE:
 					if (demographics.get(fieldName) != null && (registrationDTO.getUpdatableFields().contains(fieldName) ||
-							fieldName.equals("UIN")))
+							fieldName.equals("UIN")) || fieldName.equals("selectedHandles"))
 						setField(registrationDTO.getRegistrationId(), fieldName, demographics.get(fieldName),
 								registrationDTO.getProcessId().toUpperCase(), source);
 					break;
@@ -639,6 +640,22 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		FileUtils.copyToFile(new ByteArrayInputStream(clientCryptoFacade.encrypt(key, content)),
 				Paths.get(baseLocation, packetManagerAccount, packetId.concat("_Ack.").concat(format)).toFile());
 		registrationDAO.updateAckReceiptSignature(packetId, CryptoUtil.encodeToURLSafeBase64(signature));
+	}
+
+	private void updateSelectedHandles(RegistrationDTO registrationDTO) {
+		List<String> requiredFields = registrationDTO.getHandleFields();
+		List<String> selectedHandles = new ArrayList<>();
+
+		Map<String, Object> demographics = registrationDTO.getDemographics();
+
+		for (String fieldId : requiredFields) {
+			if (demographics.containsKey(fieldId)) {
+				selectedHandles.add(fieldId);
+			}
+		}
+		if (!selectedHandles.isEmpty()) {
+			registrationDTO.addDemographicFields("selectedHandles", selectedHandles);
+		}
 	}
 
 
