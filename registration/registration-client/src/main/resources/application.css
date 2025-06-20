@@ -508,7 +508,7 @@
 	-fx-background-color: #ffffff;
 	-fx-background-radius: 6.0, 5.0;
 	-fx-background-insets: 0.0, 1.0;
-	-fx-text-fill: #ffffff;
+	-fx-text-fill: #ff5733;
 	-fx-font-size: 10.0px;
 	-fx-effect: dropshadow(three-pass-box, rgba(0.0, 0.0, 0.0, 0.6), 5.0,
 		0.0, 0.0, 1.0);
