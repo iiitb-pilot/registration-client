@@ -1432,8 +1432,8 @@ public class DemographicDetailController extends BaseController {
 
 					if (locations.isEmpty()) {
 						GenericDto lC = new GenericDto();
-						lC.setCode(RegistrationConstants.AUDIT_DEFAULT_USER);
-						lC.setName(RegistrationConstants.AUDIT_DEFAULT_USER);
+						lC.setCode(RegistrationConstants.SPACE);
+						lC.setName(RegistrationConstants.SPACE);
 						lC.setLangCode(ApplicationContext.applicationLanguage());
 						destLocationHierarchy.getItems().add(lC);
 
