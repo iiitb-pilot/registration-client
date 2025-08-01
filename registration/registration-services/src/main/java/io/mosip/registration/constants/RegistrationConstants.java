@@ -1693,6 +1693,7 @@ public class RegistrationConstants {
 	public static final String DOCUMENT_SCANNER_HOST = "mosip.registration.DOCUMENT_SCANNER_HOST";
 	public static final String DOCUMENT_SCANNER_PORT = "mosip.registration.DOCUMENT_SCANNER_PORT";
 	public static final String DOCUMENT_SCANNER_TIMEOUT = "mosip.registration.DOCUMENT_SCANNER_TIMEOUT";
+	public static final String STUB_SERVICE_NAME = "MOSIP-STUB";
 
 	// #MDM
 	// #host has to be clarified whether nedd to be in config or hardcoded

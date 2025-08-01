@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -47,6 +48,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+
+import static io.mosip.registration.constants.RegistrationConstants.STUB_SERVICE_NAME;
 
 @Controller
 public class DeviceSettingsController extends BaseController implements SettingsInterface {
@@ -270,7 +273,9 @@ public class DeviceSettingsController extends BaseController implements Settings
 			});
 			Map<String, List<MdmBioDevice>> biometricDevices = MosipDeviceSpecificationFactory.getAvailableDeviceInfo();
 			columnsCount = biometricDevices.size();
-			List<DocScanDevice> scannerDevices = docScannerFacade.getConnectedDevices();
+			List<DocScanDevice> scannerDevices = docScannerFacade.getConnectedDevices().stream()
+					.filter(device -> !STUB_SERVICE_NAME.equals(device.getServiceName()))
+					.collect(Collectors.toList());
 			if (!scannerDevices.isEmpty()) {
 				++columnsCount;
 			}
