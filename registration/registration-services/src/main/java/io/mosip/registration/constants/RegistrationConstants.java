@@ -2007,20 +2007,6 @@ public class RegistrationConstants {
 	public static final String DOCUMENT_NAME_REGEX = "[^a-zA-Z0-9.-]";
 	public static final String DOCUMENT_REPLACEMENT = "_";
 	public static final String DOCUMENT_STORE="docs";
-	// Suffix used for scanned document pages
-	public static final String DOCUMENT_PAGE_SUFFIX = "Page";
 	// File extension for scanned image files
 	public static final String DOCUMENT_IMAGE_EXTENSION = ".png";
-	public static final String FORMAT_NAME="png";
-
-	// JavaScript global object reference
-	public static final String JS_GLOBAL_WINDOW = "window";
-	// JavaScript to delete existing bridgeFactory reference
-	public static final String JS_DELETE_BRIDGE_FACTORY = "delete window.bridgeFactory;";
-	// JavaScript to delete existing javaBridge reference
-	public static final String JS_DELETE_JAVA_BRIDGE = "delete window.javaBridge;";
-	// JavaScript to inject bridgeFactory as javaBridge
-	public static final String JS_INJECT_BRIDGE = "window.javaBridge = window.bridgeFactory;";
-	// Java-JavaScript bridge object name
-	public static final String BRIDGE_FACTORY_NAME = "bridgeFactory";
 }

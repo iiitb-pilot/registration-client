@@ -23,8 +23,9 @@ import java.util.ResourceBundle;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
-import io.mosip.registration.controller.docpreview.JavaBridge;
+import io.mosip.registration.controller.docpreview.JSBridge;
 import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.scene.control.*;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
@@ -334,66 +335,45 @@ public class RegistrationApprovalController extends BaseController implements In
 	private void viewAck() {
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying the Acknowledgement form started");
+
 		if (table.getSelectionModel().getSelectedItem() != null) {
-			try {
-				if (!approvalmapList.isEmpty()) {
-					authenticateBtn.setDisable(false);
-				}
-				webView.getEngine().loadContent(RegistrationConstants.EMPTY);
 
-				approvalBtn.setVisible(true);
-				rejectionBtn.setVisible(true);
-				imageAnchorPane.setVisible(true);
-
-				String packetId = table.getSelectionModel().getSelectedItem().getPacketId();
-				String acknowledgementContent = packetHandlerService.getAcknowledgmentReceipt(
-						packetId,
-						table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath());
-
-				if (acknowledgementContent != null && !acknowledgementContent.isEmpty()) {
-					WebEngine engine = webView.getEngine();
-					engine.loadContent(acknowledgementContent);
-
-					String docsFolderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
-
-					engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-						if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
-							Platform.runLater(() -> {
-								try {
-									JSObject window = (JSObject) engine.executeScript(RegistrationConstants.JS_GLOBAL_WINDOW);
-
-									// Clear any stale references before injecting a new bridge
-									engine.executeScript(RegistrationConstants.JS_DELETE_BRIDGE_FACTORY);
-									engine.executeScript(RegistrationConstants.JS_DELETE_JAVA_BRIDGE);
-
-									JavaBridge bridge = new JavaBridge(packetId, docsFolderPath);
-									window.setMember(RegistrationConstants.BRIDGE_FACTORY_NAME, bridge);
-									engine.executeScript(RegistrationConstants.JS_INJECT_BRIDGE);
-
-									LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-											"JavaBridge injected for PacketID: {}", packetId);
-								} catch (Exception e) {
-									LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-											"Failed to inject JavaBridge in viewAck for PacketID: " + packetId, e);
-								}
-							});
-						}
-					});
-
-					LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-							"Acknowledgement template loaded for PacketID: {}", packetId);
-				} else {
-					LOGGER.warn(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-							"Acknowledgement content is empty for PacketID: {}", packetId);
-				}
-			} catch (Exception ex) {
-				LOGGER.error(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-						"Error displaying the acknowledgement form", ex);
+			if (!approvalmapList.isEmpty()) {
+				authenticateBtn.setDisable(false);
 			}
-		}else {
-		LOGGER.warn(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
-				"No item selected in table to view acknowledgement");
-	    }
+
+			webView.getEngine().loadContent(RegistrationConstants.EMPTY);
+
+			approvalBtn.setVisible(true);
+			rejectionBtn.setVisible(true);
+			imageAnchorPane.setVisible(true);
+
+			try {
+				String acknowledgementContent = packetHandlerService.getAcknowledgmentReceipt(
+						table.getSelectionModel().getSelectedItem().getPacketId(),
+						table.getSelectionModel().getSelectedItem().getAcknowledgementFormPath()
+				);
+
+				// Create the bridge
+				JSBridge bridge = new JSBridge();
+
+				// Attach listener to inject javaBridge when page finishes loading
+				webView.getEngine().getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+					if (newState == Worker.State.SUCCEEDED) {
+						netscape.javascript.JSObject window =
+								(netscape.javascript.JSObject) webView.getEngine().executeScript("window");
+						window.setMember("javaBridge", bridge);
+					}
+				});
+
+				// Load the HTML content
+				webView.getEngine().loadContent(acknowledgementContent);
+
+			} catch (RegBaseCheckedException | io.mosip.kernel.core.exception.IOException ex) {
+				LOGGER.error("REGISTRATION_ACKNOWLEDGEMENT_PAGE_LOADING_FAILED", ex);
+			}
+		}
+
 		LOGGER.info(LOG_REG_PENDING_APPROVAL, APPLICATION_NAME, APPLICATION_ID,
 				"Displaying the Acknowledgement form completed");
 	}
@@ -680,10 +660,11 @@ public class RegistrationApprovalController extends BaseController implements In
 
 			List<String> regIds = new ArrayList<>();
 			for (Map<String, String> map : approvalmapList) {
+				String applicationId = map.get(RegistrationConstants.PACKET_APPLICATION_ID);
 				registrationApprovalService.updateRegistrationWithPacketId(map.get(RegistrationConstants.PACKET_ID),
 						map.get(RegistrationConstants.STATUSCOMMENT), map.get(RegistrationConstants.STATUSCODE));
 				regIds.add(map.get(RegistrationConstants.REGISTRATIONID));
-				deleteScannedImages(map.get(RegistrationConstants.PACKET_ID));
+				deleteScannedImages(applicationId);
 			}
 			generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.AUTH_APPROVAL_SUCCESS_MSG));
 			actionCounter = 0;
@@ -718,7 +699,7 @@ public class RegistrationApprovalController extends BaseController implements In
 				"Updation of registration according to status ended");
 	}
 
-	public void deleteScannedImages(String packetId) {
+	public void deleteScannedImages(String appId) {
 		String folderPath = baseLocation + File.separator + packetManagerAccount + File.separator+  RegistrationConstants.DOCUMENT_STORE;
 		File directory = new File(folderPath);
 
@@ -727,10 +708,10 @@ public class RegistrationApprovalController extends BaseController implements In
 			return;
 		}
 
-		File[] filesToDelete = directory.listFiles((dir, name) -> name.startsWith(packetId) && name.endsWith(RegistrationConstants.DOCUMENT_IMAGE_EXTENSION));
+		File[] filesToDelete = directory.listFiles((dir, name) -> name.startsWith(appId) && name.endsWith(RegistrationConstants.DOCUMENT_IMAGE_EXTENSION));
 
 		if (filesToDelete == null || filesToDelete.length == 0) {
-			LOGGER.info("No scanned documents found for deletion with Packet ID: " + packetId);
+			LOGGER.info("No scanned documents found for deletion with Application ID: " + appId);
 			return;
 		}
 
