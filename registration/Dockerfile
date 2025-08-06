@@ -1,5 +1,13 @@
 FROM mosipdev/javafx-reg-client-openjdk:latest
 
+# Fix broken apt sources due to Debian Buster EOL and install packages in one step
+RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i '/security.debian.org/d' /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until && \
+    apt-get -y update && \
+    apt-get install -y unzip zip nginx && \
+    rm -rf /var/lib/apt/lists/* \
+    
 ARG SOURCE
 ARG COMMIT_HASH
 ARG COMMIT_ID
