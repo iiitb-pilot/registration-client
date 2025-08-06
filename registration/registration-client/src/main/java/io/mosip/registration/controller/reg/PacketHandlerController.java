@@ -236,17 +236,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 	@Autowired
 	private LanguageSelectionController languageSelectionController;
 
-	@Autowired
-	private ScanPopUpViewController scanPopUpViewController;
-
-	public static String packetId;
-
-	@Value("${object.store.base.location}")
-	private String baseLocation;
-
-	@Value("${packet.manager.account.name}")
-	private String packetManagerAccount;
-
 	@SuppressWarnings("unchecked")
 	public void setLastUpdateTime() {
 		try {
@@ -637,8 +626,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				packetHandlerService.createAcknowledgmentReceipt(registrationDTO.getPacketId(), ackInBytes,
 						RegistrationConstants.ACKNOWLEDGEMENT_FORMAT);
-				packetId = registrationDTO.getPacketId();
-				saveScannedDocumentsWithPacketId(packetId);
 				// Sync and Uploads Packet when EOD Process Configuration is set to OFF
 				String supervisorApproval = getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG);
 				if (supervisorApproval != null && !getValueFromApplicationContext(RegistrationConstants.SUPERVISOR_APPROVAL_CONFIG_FLAG)
@@ -669,50 +656,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 		}
 		return response;
 	}
-
-	public void saveScannedDocumentsWithPacketId(String packetId) {
-		if (baseLocation == null || packetManagerAccount == null) {
-			LOGGER.error("Base location or Packet Manager Account is null. Cannot save scanned documents.");
-			return;
-		}
-
-		String folderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
-		File directory = new File(folderPath);
-
-		if (!directory.exists() && !directory.mkdirs()) {
-			LOGGER.error("Failed to create folder: " + folderPath);
-			return;
-		}
-
-		Map<String, List<BufferedImage>> scannedDocuments = scanPopUpViewController.getScannedDocumentsMap();
-
-		if (scannedDocuments.isEmpty()) {
-			LOGGER.warn("No scanned documents found to save for Packet ID: " + packetId);
-			return;
-		}
-
-		try {
-			for (Map.Entry<String, List<BufferedImage>> entry : scannedDocuments.entrySet()) {
-				String documentName = entry.getKey();
-				List<BufferedImage> pages = entry.getValue();
-
-				for (int i = 0; i < pages.size(); i++) {
-					String newFileName = packetId + RegistrationConstants.DOCUMENT_REPLACEMENT + documentName + RegistrationConstants.DOCUMENT_REPLACEMENT+RegistrationConstants.DOCUMENT_PAGE_SUFFIX + (i + 1) + RegistrationConstants.DOCUMENT_IMAGE_EXTENSION;
-					File outputFile = new File(folderPath + File.separator + newFileName);
-
-					ImageIO.write(pages.get(i), RegistrationConstants.FORMAT_NAME, outputFile);
-					LOGGER.info("Saved scanned document page: " + outputFile.getAbsolutePath());
-				}
-			}
-
-			scanPopUpViewController.clearScannedDocuments();
-
-		} catch (IOException e) {
-			LOGGER.error("Error saving scanned documents with Packet ID", e);
-		}
-	}
-
-
 	/**
 	 * Load re registration screen.
 	 */

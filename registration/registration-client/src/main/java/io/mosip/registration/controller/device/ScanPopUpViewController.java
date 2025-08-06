@@ -1,6 +1,7 @@
 package io.mosip.registration.controller.device;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -119,6 +120,12 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 	@Value("${mosip.doc.stage.height:620}")
 	private int height;
+
+	@Value("${object.store.base.location}")
+	private String baseLocation;
+
+	@Value("${packet.manager.account.name}")
+	private String packetManagerAccount;
 
 	private Map<String, List<BufferedImage>> scannedDocumentsMap = new HashMap<>();
 
@@ -379,6 +386,9 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 
 			documentScanController.getFxControl().setData(documentScanController.getScannedPages());
 			documentScanController.getScannedPages().clear();
+			String appId = getRegistrationDTOFromSession().getAppId();
+			LOGGER.info("Saving scanned documents using Application ID: {}", appId);
+			saveScannedDocumentsWithApplicationId(appId);
 			popupStage.close();
 
 		} catch (RuntimeException exception) {
@@ -395,10 +405,6 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		documentPageCount.put(documentName, scannedDocumentsMap.get(documentName).size());
 
 		LOGGER.info("Scanned page stored for document: " + documentName + " | Total Pages: " + documentPageCount.get(documentName));
-	}
-
-	public Map<String, List<BufferedImage>> getScannedDocumentsMap() {
-		return scannedDocumentsMap;
 	}
 
 	public void clearScannedDocuments() {
@@ -727,5 +733,43 @@ public class ScanPopUpViewController extends BaseController implements Initializ
 		cancelBtn.setDisable(true);
 		cropButton.setDisable(true);
 		previewBtn.setDisable(true);
+	}
+
+	public void saveScannedDocumentsWithApplicationId(String appId) {
+		String folderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
+
+		try {
+			File folder = new File(folderPath);
+			if (!folder.exists()) {
+				boolean created = folder.mkdirs();
+				LOGGER.info("Created image folder: {} = {}", folder.getCanonicalPath(), created);
+			} else {
+				LOGGER.debug("Resolved canonical folder path: {}", folder.getCanonicalPath());
+			}
+
+			for (Map.Entry<String, List<BufferedImage>> entry : scannedDocumentsMap.entrySet()) {
+				String fieldName = entry.getKey();
+				List<BufferedImage> pages = entry.getValue();
+
+				for (int i = 0; i < pages.size(); i++) {
+					BufferedImage image = pages.get(i);
+					String fileName = appId + "_" + fieldName + "_Page" + (i + 1) + RegistrationConstants.DOCUMENT_IMAGE_EXTENSION;
+					File outputFile = new File(folder, fileName);
+
+					try {
+						javax.imageio.ImageIO.write(image, "png", outputFile);
+						LOGGER.info("Saved scanned document: {}", outputFile.getCanonicalPath());
+					} catch (IOException e) {
+						LOGGER.error("Failed to save image: {}", fileName, e);
+					}
+				}
+			}
+
+			clearScannedDocuments();
+			LOGGER.debug("Cleared scanned document buffer after saving for Application ID: {}", appId);
+
+		} catch (IOException e) {
+			LOGGER.error("Error during scanned document saving for Application ID: {}", appId, e);
+		}
 	}
 }
