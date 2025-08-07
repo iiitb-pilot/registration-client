@@ -33,8 +33,6 @@ public class ImagePopupViewer {
     private final Label pageCountLabel = new Label();
     private final Label appIdLabel = new Label();
     private final ProgressIndicator loadingSpinner = new ProgressIndicator();
-    private final double DEFAULT_WIDTH = 1000;
-    private final double DEFAULT_HEIGHT = 800;
 
     public ImagePopupViewer(List<String> images, String applicationId) {
         this.images = images;
@@ -121,15 +119,14 @@ public class ImagePopupViewer {
                 String base64 = images.get(index);
                 String cleanBase64 = base64.contains(",") ? base64.split(",")[1] : base64;
                 byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
-                Image image = new Image(new ByteArrayInputStream(decodedBytes), DEFAULT_WIDTH, DEFAULT_HEIGHT, true, true);
-
+                Image image = new Image(new ByteArrayInputStream(decodedBytes));
                 Platform.runLater(() -> {
                     imageView.setImage(image);
                     imageView.setPreserveRatio(true);
 
                     Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-                    double maxWidth = Math.min(screenBounds.getWidth() * 0.7, DEFAULT_WIDTH);
-                    double maxHeight = Math.min(screenBounds.getHeight() * 0.7, DEFAULT_HEIGHT);
+                    double maxWidth = screenBounds.getWidth() * 0.7;
+                    double maxHeight = screenBounds.getHeight() * 0.7;
 
                     imageView.setFitWidth(maxWidth);
                     imageView.setFitHeight(maxHeight);
