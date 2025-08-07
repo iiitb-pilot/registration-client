@@ -2,18 +2,18 @@ package io.mosip.registration.controller.docpreview;
 
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.registration.config.AppConfig;
-
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -32,6 +32,9 @@ public class ImagePopupViewer {
     private final ImageView imageView = new ImageView();
     private final Label pageCountLabel = new Label();
     private final Label appIdLabel = new Label();
+    private final ProgressIndicator loadingSpinner = new ProgressIndicator();
+    private final double DEFAULT_WIDTH = 1000;
+    private final double DEFAULT_HEIGHT = 800;
 
     public ImagePopupViewer(List<String> images, String applicationId) {
         this.images = images;
@@ -56,9 +59,15 @@ public class ImagePopupViewer {
             stage.setY((screenBounds.getHeight() - height) / 2);
 
             ScrollPane scrollPane = new ScrollPane(imageView);
-            scrollPane.setFitToWidth(true);
-            scrollPane.setFitToHeight(true);
+            scrollPane.setFitToWidth(false);
+            scrollPane.setFitToHeight(false);
+            scrollPane.setPannable(true);
             scrollPane.setStyle("-fx-background-color: #1e272e;");
+
+            loadingSpinner.setVisible(false);
+            loadingSpinner.setMaxSize(80, 80);
+
+            StackPane stackPane = new StackPane(scrollPane, loadingSpinner);
 
             HBox toolbarContent = new HBox(
                     styledButton("⏪ Prev", "#3498db", e -> showPrev()),
@@ -84,7 +93,7 @@ public class ImagePopupViewer {
 
             BorderPane root = new BorderPane();
             root.setTop(toolbarContent);
-            root.setCenter(scrollPane);
+            root.setCenter(stackPane);
             root.setBottom(bottomBar);
             root.setStyle("-fx-background-color: #1e272e;");
 
@@ -100,36 +109,42 @@ public class ImagePopupViewer {
         }
     }
 
-    private Button styledButton(String text, String bgColor, javafx.event.EventHandler<javafx.event.ActionEvent> action) {
-        Button btn = new Button(text);
-        btn.setOnAction(action);
-        btn.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: white; -fx-font-weight: bold; "
-                + "-fx-padding: 8px 15px; -fx-background-radius: 5px;");
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: derive(" + bgColor + ", 20%); "
-                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 5px;"));
-        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: " + bgColor + "; "
-                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 5px;"));
-        return btn;
-    }
-
     private void loadImage(int index) {
-        try {
-            LOGGER.debug("Loading page {} of {} for Application ID: {}", index + 1, images.size(), applicationId);
+        loadingSpinner.setVisible(true);
+        imageView.setImage(null);
+        pageCountLabel.setText("Loading...");
 
-            String base64 = images.get(index);
-            String cleanBase64 = base64.contains(",") ? base64.split(",")[1] : base64;
-            byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
-            imageView.setImage(new Image(new ByteArrayInputStream(decodedBytes)));
-            imageView.setPreserveRatio(true);
+        new Thread(() -> {
+            try {
+                LOGGER.debug("Loading page {} of {} for Application ID: {}", index + 1, images.size(), applicationId);
 
-            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-            imageView.setFitWidth(screenBounds.getWidth() * 0.65);
-            imageView.setFitHeight(screenBounds.getHeight() * 0.65);
+                String base64 = images.get(index);
+                String cleanBase64 = base64.contains(",") ? base64.split(",")[1] : base64;
+                byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
+                Image image = new Image(new ByteArrayInputStream(decodedBytes), DEFAULT_WIDTH, DEFAULT_HEIGHT, true, true);
 
-            pageCountLabel.setText("Page: " + (currentIndex + 1) + " of " + images.size());
-        } catch (Exception e) {
-            LOGGER.error("Error loading image at index {} for Application ID: {}", index, applicationId, e);
-        }
+                Platform.runLater(() -> {
+                    imageView.setImage(image);
+                    imageView.setPreserveRatio(true);
+
+                    Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+                    double maxWidth = Math.min(screenBounds.getWidth() * 0.7, DEFAULT_WIDTH);
+                    double maxHeight = Math.min(screenBounds.getHeight() * 0.7, DEFAULT_HEIGHT);
+
+                    imageView.setFitWidth(maxWidth);
+                    imageView.setFitHeight(maxHeight);
+
+                    pageCountLabel.setText("Page: " + (currentIndex + 1) + " of " + images.size());
+                    loadingSpinner.setVisible(false);
+                });
+            } catch (Exception e) {
+                LOGGER.error("Error loading image at index {} for Application ID: {}", index, applicationId, e);
+                Platform.runLater(() -> {
+                    pageCountLabel.setText("Error loading image.");
+                    loadingSpinner.setVisible(false);
+                });
+            }
+        }).start();
     }
 
     private void showPrev() {
@@ -159,5 +174,17 @@ public class ImagePopupViewer {
     private void resetZoom() {
         LOGGER.debug("Resetting zoom for Application ID: {}", applicationId);
         loadImage(currentIndex);
+    }
+
+    private Button styledButton(String text, String bgColor, javafx.event.EventHandler<javafx.event.ActionEvent> action) {
+        Button btn = new Button(text);
+        btn.setOnAction(action);
+        btn.setStyle("-fx-background-color: " + bgColor + "; -fx-text-fill: white; -fx-font-weight: bold; "
+                + "-fx-padding: 8px 15px; -fx-background-radius: 5px;");
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: derive(" + bgColor + ", 20%); "
+                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 5px;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: " + bgColor + "; "
+                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 15px; -fx-background-radius: 5px;"));
+        return btn;
     }
 }
