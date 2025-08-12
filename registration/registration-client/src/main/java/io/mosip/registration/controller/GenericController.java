@@ -488,6 +488,14 @@ public class GenericController<uiFieldDTO> extends BaseController {
 				}
 			}
 		}
+		try {
+			String preRegId = getRegistrationDTOFromSession().getPreRegistrationId();
+			LOGGER.info("[loadPreRegSync] Saving cached pre-reg docs for Application ID: {}", preRegId);
+			scanPopUpViewController.saveScannedDocumentsWithApplicationId(preRegId);
+			LOGGER.info("[loadPreRegSync] Save process completed for Application ID: {}", preRegId);
+		} catch (Exception e) {
+			LOGGER.error("[loadPreRegSync] Failed to save pre-reg documents locally", e);
+		}
 	}
 
 

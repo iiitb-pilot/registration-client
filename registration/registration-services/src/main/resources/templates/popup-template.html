@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scanned Document Viewer</title>
+    <script>
+    function showImagePopup(key, linkElement) {
+        try {
+            const imagesAttr = linkElement.getAttribute('data-images');
+            const imageList = JSON.parse(imagesAttr.replace(/'/g, '"'));
+
+            if (!imageList || imageList.length === 0) {
+                alert('No scanned images available.');
+                return;
+            }
+
+            if (typeof javaBridge !== 'undefined' && javaBridge.showImagePopupFromJava) {
+                javaBridge.showImagePopupFromJava(JSON.stringify(imageList), currentAppId);
+            } else {
+                alert('Image viewer is not available.');
+            }
+        } catch (e) {
+            console.error('Error preparing image popup:', e);
+            alert('Unable to open image popup.');
+        }
+    }
+   </script>
+</head>
+<body>
+<!-- This file is intended to be injected or loaded via Java WebView or merged into the final template. -->
+</body>
+</html>
