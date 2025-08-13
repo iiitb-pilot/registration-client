@@ -5,14 +5,10 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -38,6 +34,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 
 import io.mosip.biometrics.util.ConvertRequestDto;
@@ -127,6 +124,12 @@ public class TemplateGenerator extends BaseService {
 	@Autowired
 	private SoftwareUpdateHandler softwareUpdateHandler;
 
+	@Value("${packet.manager.account.name}")
+	private String packetManagerAccount;
+
+	@Value("${object.store.base.location}")
+	private String baseLocation;
+
 	public ResponseDTO generateTemplate(String templateText, RegistrationDTO registration, TemplateManagerBuilder
 			templateManagerBuilder, String templateType, String crossImagePath) throws RegBaseCheckedException {
 		ResponseDTO response = new ResponseDTO();
@@ -151,11 +154,12 @@ public class TemplateGenerator extends BaseService {
 			Map<String, Map<String, Object>> demographicsData = new HashMap<>();
 			Map<String, Map<String, Object>> documentsData = new HashMap<>();
 			Map<String, Map<String, Object>> biometricsData = new HashMap<>();
+			String appId = registration.getAppId();
 
 			for (UiFieldDTO field : schemaFields) {
 				switch (field.getType()) {
 					case "documentType":
-						Map<String, Object> doc_data = getDocumentData(registration, field, templateValues);
+						Map<String, Object> doc_data = getDocumentData(registration, field, templateValues, appId);
 						if(doc_data != null) { documentsData.put(field.getId(), doc_data); }
 						break;
 
@@ -180,12 +184,34 @@ public class TemplateGenerator extends BaseService {
 			TemplateManager templateManager = templateManagerBuilder.build();
 			InputStream inputStream = templateManager.merge(is, templateValues);
 			IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8);
+			String mergedHtml = writer.toString();
+
+			// Inject popup script from external HTML template
+			String popupScriptHtml = loadHtmlResource("/templates/popup-template.html");
+			String appIdScript = "<script>const currentAppId = '" + appId + "';</script>";
+
+			String finalHtml = mergedHtml;
+			if (finalHtml.contains("<head>")) {
+				finalHtml = finalHtml.replace("<head>", "<head>\n" + appIdScript);
+			} else {
+				finalHtml = appIdScript + finalHtml;
+			}
+
+			if (finalHtml.contains("</body>")) {
+				finalHtml = finalHtml.replace("</body>", popupScriptHtml + "\n</body>");
+			} else {
+				finalHtml = finalHtml + popupScriptHtml;
+			}
 			LOGGER.debug(LOG_TEMPLATE_GENERATOR, APPLICATION_NAME, APPLICATION_ID,
 					"generateTemplate method has been ended for preparing Acknowledgement Template.");
 
 			Map<String, Object> responseMap = new WeakHashMap<>();
-			responseMap.put(RegistrationConstants.TEMPLATE_NAME, writer);
+			StringWriter finalWriter = new StringWriter();
+			finalWriter.write(finalHtml);
+			responseMap.put(RegistrationConstants.TEMPLATE_NAME, finalWriter);
 			setSuccessResponse(response, RegistrationConstants.SUCCESS, responseMap);
+			LOGGER.debug(LOG_TEMPLATE_GENERATOR, APPLICATION_NAME, APPLICATION_ID,
+					"generateTemplate method has been ended for preparing Acknowledgement Template.");
 
 		} catch (RuntimeException | IOException runtimeException) {
 			setErrorResponse(response, RegistrationConstants.TEMPLATE_GENERATOR_ACK_RECEIPT_EXCEPTION, null);
@@ -324,7 +350,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private Map<String, Object> getDocumentData(RegistrationDTO registration, UiFieldDTO field,
-												Map<String, Object> templateValues) {
+												Map<String, Object> templateValues, String applicationId) {
 		Map<String, Object> data = null;
 		if(registration.getDocuments().get(field.getId()) != null) {
 			data = new HashMap<>();
@@ -338,6 +364,10 @@ public class TemplateGenerator extends BaseService {
 				templateValues.put(RegistrationConstants.TEMPLATE_EXCEPTION_IMAGE_SOURCE, RegistrationConstants.TEMPLATE_JPG_IMAGE_ENCODING +
 						StringUtils.newStringUtf8(Base64.encodeBase64(registration.getDocuments().get(field.getId()).getDocument(), false)));
 			}*/
+			List<String> base64Images = loadScannedDocumentsAsBase64(applicationId, field.getId());
+			if (!base64Images.isEmpty()) {
+				data.put("base64Images", base64Images);
+			}
 		}
 		return data;
 	}
@@ -778,5 +808,67 @@ public class TemplateGenerator extends BaseService {
 					ExceptionUtils.getStackTrace(exception));
 		}
 		return time + RegistrationConstants.UTC_APPENDER;
+	}
+
+	private String loadHtmlResource(String path) throws IOException {
+		try (InputStream is = this.getClass().getResourceAsStream(path)) {
+			if (is == null) throw new FileNotFoundException("Could not find: " + path);
+			return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+		}
+	}
+
+	public List<String> loadScannedDocumentsAsBase64(String applicationId, String fieldName) {
+		List<String> base64Images = new ArrayList<>();
+
+		String folderPath = baseLocation + File.separator + packetManagerAccount + File.separator + RegistrationConstants.DOCUMENT_STORE;
+		File directory = new File(folderPath);
+
+		try {
+			String canonicalPath = directory.getCanonicalPath();
+			LOGGER.debug("Resolved canonical folder path: {}", canonicalPath);
+
+			if (!directory.exists() || !directory.isDirectory()) {
+				LOGGER.warn("No files found in directory: {}", folderPath);
+				return base64Images;
+			}
+
+			File[] files = directory.listFiles();
+			if (files == null || files.length == 0) {
+				LOGGER.warn("No files found in directory: {}", folderPath);
+				return base64Images;
+			}
+
+			LOGGER.debug("All files in directory:");
+			for (File f : files) {
+				LOGGER.debug("   - {}", f.getName());
+			}
+
+			LOGGER.info("Searching for files that start with [{}], contain [{}], and end with .png",
+					applicationId, fieldName);
+
+			for (File file : files) {
+				String fileName = file.getName();
+				if (fileName.startsWith(applicationId) && fileName.contains(fieldName) && fileName.endsWith(RegistrationConstants.DOCUMENT_IMAGE_EXTENSION)) {
+					byte[] imageBytes = Files.readAllBytes(file.toPath());
+					String base64 = "data:image/png;base64," +
+							java.util.Base64.getEncoder().encodeToString(imageBytes);
+					base64Images.add(base64);
+				}
+			}
+
+			if (base64Images.isEmpty()) {
+				LOGGER.warn("No matching scanned images found for applicationId = {}, fieldName = {}",
+						applicationId, fieldName);
+			} else {
+				LOGGER.info("Found {} matching scanned images for applicationId = {}, fieldName = {}",
+						base64Images.size(), applicationId, fieldName);
+			}
+
+		} catch (IOException e) {
+			LOGGER.error("Error loading scanned documents for applicationId = {}, fieldName = {}",
+					applicationId, fieldName, e);
+		}
+
+		return base64Images;
 	}
 }
