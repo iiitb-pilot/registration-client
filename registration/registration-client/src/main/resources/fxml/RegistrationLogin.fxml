@@ -10,9 +10,9 @@
       <children>
         <Label style="-fx-text-fill: white;" text="%mosip.io" />
         <Label text="  " />
-        <Label style="-fx-text-fill: white;" text="%regClientVersion" />
+        <Label style="-fx-text-fill: black;" text="%regClientVersion" />
         <Label text=" : " />
-        <Label style="-fx-text-fill: white;" fx:id="versionValueLabel" />
+        <Label style="-fx-text-fill: black;" fx:id="versionValueLabel" />
       </children>
     </HBox>
   </bottom>
@@ -102,19 +102,19 @@
       </children>
     </AnchorPane>
   </right>
-  <top>
+  <!--<top>
     <HBox id="header-section" prefHeight="27.0" prefWidth="523.0">
       <children>
         <AnchorPane prefHeight="27.0" prefWidth="71.0">
           <children>
             <ImageView fx:id="mosipLogoImageView" fitHeight="54.0" fitWidth="50.0" layoutX="20.0" layoutY="2.0">
               <image>
-                <Image url="@../images/logo-final.png" />
+                <Image url="@../images/logo-final9.png" />
               </image>
             </ImageView>
           </children>
         </AnchorPane>
       </children>
     </HBox>
-  </top>
+  </top>-->
 </BorderPane>
