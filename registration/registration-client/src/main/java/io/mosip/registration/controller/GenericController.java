@@ -22,6 +22,7 @@ import io.mosip.registration.dto.schema.ProcessSpecDto;
 import io.mosip.registration.dto.schema.UiFieldDTO;
 import io.mosip.registration.dto.schema.UiScreenDTO;
 import io.mosip.registration.entity.LocationHierarchy;
+import io.mosip.registration.enums.FlowType;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.service.sync.PreRegistrationDataSyncService;
@@ -852,7 +853,7 @@ public class GenericController<uiFieldDTO> extends BaseController {
 			int rowIndex = 0;
 			GridPane gridPane = getScreenGroupGridPane(screenGridPane.getId()+"_col_1", screenGridPane);
 
-			if(screenDTO.isPreRegFetchRequired()) {
+			if(screenDTO.isPreRegFetchRequired() && getRegistrationDTOFromSession().getFlowType()== FlowType.NEW) {
 				gridPane.add(getPreRegistrationFetchComponent(), 0, rowIndex++);
 			}
 			if(screenDTO.isAdditionalInfoRequestIdRequired()) {
