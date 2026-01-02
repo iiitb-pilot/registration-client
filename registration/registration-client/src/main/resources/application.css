@@ -7,6 +7,20 @@
 	-fx-font-weight: bold;
     -fx-tex-fill: green;
 }
+.mdsQualityLabel {
+	-fx-text-fill: #000000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityLabel {
+	-fx-text-fill: #800000;
+	-fx-font-weight: bold;
+}
+
+.sdkQualityText {
+	-fx-text-fill: #800000;
+	-fx-font-size: 12.0px;
+}
 
 .keyboardPane {
 	-fx-background-color: white;

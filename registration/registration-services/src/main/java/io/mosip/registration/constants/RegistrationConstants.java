@@ -58,6 +58,9 @@ public class RegistrationConstants {
 	public static final String SETTINGS_PAGE = "/fxml/Settings.fxml";
 	public static final String FXML_PATH = "/fxml/";
 	public static final String BIOMETRICS_SCAN_PAGE = "/fxml/BiometricScanPopUp.fxml";
+	public static final String QR_CODE_PAGE = "/fxml/QrCode.fxml";
+	public static final String QR_CODE = "/images/qr-code.png";
+	public static final String REGCLIENT_QR_CODE_SCAN_ENABLE = "mosip.registration.qr_code.scan_enable_flag";
 
 	// FXML Id
 	public static final String DEMOGRAPHIC_DETAIL = "demographicDetail";

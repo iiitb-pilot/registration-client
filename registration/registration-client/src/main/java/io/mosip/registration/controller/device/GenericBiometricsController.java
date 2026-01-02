@@ -71,6 +71,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+
 /**
  * {@code GenericBiometricsController} is to capture and display the captured
  * biometrics during registration process
@@ -1420,7 +1421,7 @@ public class GenericBiometricsController extends BaseController {
 		this.fxControl = (BiometricFxControl) fxControl;
 		this.scanBtn.setId(this.fxControl.getUiSchemaDTO().getId()+"ScanBtn");
 		this.qualityScore.setId(this.fxControl.getUiSchemaDTO().getId()+"QualityScore");
-		this.currentModality = modality;
+		this.currentModality = modality;  
 		this.configBioAttributes = configBioAttributes;
 		this.nonConfigBioAttributes = nonConfigBioAttributes;
 		displayBiometric(modality);
