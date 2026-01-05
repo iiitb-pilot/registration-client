@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -151,6 +153,9 @@ public class GenericController extends BaseController {
 
 	@Autowired
 	private ScanPopUpViewController scanPopUpViewController;
+	private TextField registrationNumberTextField;
+	@Autowired
+	private QrCodePopUpViewController qrCodePopUpViewController;
 	
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
@@ -211,7 +216,7 @@ public class GenericController extends BaseController {
 		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.setSpacing(20);
 		hBox.setPrefHeight(100);
-		hBox.setPrefWidth(200);
+
 
 		Label label = new Label();
 		label.getStyleClass().add(LABEL_CLASS);
@@ -219,10 +224,14 @@ public class GenericController extends BaseController {
 		label.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("search_for_Pre_registration_id"));
 		hBox.getChildren().add(label);
+		HBox innerHBox = new HBox();
+		innerHBox.setAlignment(Pos.CENTER_LEFT);
+		innerHBox.setSpacing(0);
+		innerHBox.setPrefHeight(100);
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
 		textField.getStyleClass().add(TEXTFIELD_CLASS);
-		hBox.getChildren().add(textField);
+		this.registrationNumberTextField = textField;
 		Button button = new Button();
 		button.setId("fetchBtn");
 		button.getStyleClass().add("demoGraphicPaneContentButton");
@@ -232,6 +241,23 @@ public class GenericController extends BaseController {
 		button.setOnAction(event -> {
 			executePreRegFetchTask(textField);
 		});
+		if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.REGCLIENT_QR_CODE_SCAN_ENABLE, RegistrationConstants.ENABLE))) {
+			Button scanQRbutton = new Button();
+			scanQRbutton.setId("scanQRBtn");
+			scanQRbutton.setGraphic(new ImageView(
+					new Image(this.getClass().getResourceAsStream(RegistrationConstants.QR_CODE), 25, 25, true, true)));
+			scanQRbutton.getStyleClass().add("demoGraphicPaneContentButton");
+			scanQRbutton.setOnAction(event -> {
+				executeQRCodeScan();
+			});
+
+			innerHBox.getChildren().add(scanQRbutton);
+		}
+
+		innerHBox.getChildren().add(textField);
+
+		hBox.getChildren().add(innerHBox);
 
 		hBox.getChildren().add(button);
 		progressIndicator = new ProgressIndicator();
@@ -241,7 +267,7 @@ public class GenericController extends BaseController {
 		return hBox;
 	}
 
-	private void executePreRegFetchTask(TextField textField) {
+	protected void executePreRegFetchTask(TextField textField) {
 		genericScreen.setDisable(true);
 		progressIndicator.setVisible(true);
 
@@ -984,5 +1010,48 @@ public class GenericController extends BaseController {
 	public String getCurrentScreenName() {
 		TabPane tabPane = (TabPane) anchorPane.lookup(HASH + getRegistrationDTOFromSession().getRegistrationId());
 		return tabPane.getSelectionModel().getSelectedItem().getId().replace("_tab", EMPTY);
+	}
+	public TextField getRegistrationNumberTextField() {
+		return registrationNumberTextField;
+
+	}
+	private void executeQRCodeScan() {
+		genericScreen.setDisable(true);
+
+		Service<Void> taskService = new Service<Void>() {
+			@Override
+			protected Task<Void> createTask() {
+				return new Task<Void>() {
+					/*
+					 * (non-Javadoc)
+					 *
+					 * @see javafx.concurrent.Task#call()
+					 */
+					@Override
+					protected Void call() {
+						Platform.runLater(() -> {
+							qrCodePopUpViewController.init(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_QR_CODE_TITLE));
+						});
+						return null;
+					}
+				};
+			}
+		};
+
+		taskService.start();
+		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent workerStateEvent) {
+				genericScreen.setDisable(false);
+			}
+		});
+		taskService.setOnFailed(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent t) {
+				LOGGER.debug("QR code scan failed");
+				genericScreen.setDisable(false);
+			}
+		});
+
 	}
 }
