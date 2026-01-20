@@ -45,6 +45,7 @@ public class RegistrationConstants {
 	public static final String PENDING_APPROVAL_PAGE = "/fxml/RegistrationPendingApproval.fxml";
 	public static final String REREGISTRATION_PAGE = "/fxml/ReRegistration.fxml";
 	public static final String SCAN_PAGE = "/fxml/Scan.fxml";
+	public static final String QR_CODE_PAGE = "/fxml/QrCode.fxml";
 	public static final String UIN_UPDATE = "/fxml/UpdateUIN.fxml";
 	public static final String SYNC_DATA = "/fxml/SyncDataProcess.fxml";
 	public static final String USER_ONBOARD = "/fxml/Onboard.fxml";
@@ -138,6 +139,7 @@ public class RegistrationConstants {
 	public static final String VIEW = "/images/View.png";
 	public static final String SCAN = "/images/scan.png";
 	public static final String SCAN_FOCUSED = "/images/scanFocused.png";
+	public static final String QR_CODE = "/images/qr-code.png";
 	public static final String BACK = "/images/arrowLeft.png";
 	public static final String BACK_FOCUSED = "/images/backInWhite.png";
 	public static final String WRONG_IMAGE_PATH = "/images/wrong.png";
@@ -848,6 +850,7 @@ public class RegistrationConstants {
 	public static final String DISK_SPACE = "mosip.registration.disk_space_size";
 	public static final String LAST_SOFTWARE_UPDATE = "mosip.registration.last_software_update";
 	public static final String REGCLIENT_INSTALLED_TIME = "mosip.registration.regclient_installed_time";
+	public static final String REGCLIENT_QR_CODE_SCAN_ENABLE = "mosip.registration.qr_code.scan_enable_flag";
 
 	// Spring Batch-Jobs
 	public static final String JOB_TRIGGER_STARTED = "Trigger started";
@@ -1806,7 +1809,7 @@ public class RegistrationConstants {
 	public static final String BIOMETRIC_FXML = "/fxml/GenericBiometricFXML.fxml";
 	public static final String DEVICE_STATUS_READY = "Ready";
 
-//	Code CleanUp 
+//	Code CleanUp
 	public static final String LABELS = "labels";
 	public static final String MESSAGES = "messages";
 	public static final String Resident_Information = "Resident_Information";
@@ -1993,4 +1996,8 @@ public class RegistrationConstants {
 	public static final String APPLICANT_TYPE_MVEL_SCRIPT = "mosip.kernel.applicantType.mvel.file";
 	public static final String FIELDS_TO_RETAIN_ON_PRID_FETCH = "mosip.registration.fields.to.retain.post.prid.fetch";
 	public static final String IMAGING_DEVICE_TYPE = "mosip.registration.imagingDeviceType";
+	public static final String DEMOGRAPHIC_GROUP = "preRegParentPaneSection";
+	public static final String DEMOGRAPHIC_GROUP_LABEL = "demoGraphicCustomLabel";
+	public static final String DEMOGRAPHIC_FIELD = "demoGraphicCustomField";
+	public static final String DOCUMENT_COMBOBOX_FIELD = "documentCustomCombobox";
 }

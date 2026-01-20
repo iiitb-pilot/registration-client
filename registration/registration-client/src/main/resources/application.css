@@ -682,6 +682,23 @@ Working on new Css by taleev
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-border-color: #005baa;
 }
+.preRegParentPaneSection {
+	-fx-border-color:#020F59;
+	-fx-border-radius: 10.0 10.0 10.0 10.0;
+}
+.demoGraphicCustomLabel {
+	-fx-background-color: #ffffff;
+	-fx-border-width: 0.0;
+	-fx-text-fill: #020F59;
+	-fx-font-size: 1.5em;
+	-fx-font-weight: 800;
+}
+
+.demoGraphicCustomField{
+	-fx-pref-width: 50%;
+	-fx-padding: 0 0 10 55;
+}
+
 
 .searchBoxTextStyle {
 	-fx-pref-height: 30.0px;
