@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javafx.scene.layout.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -63,11 +64,6 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -270,7 +266,7 @@ public class GenericBiometricsController extends BaseController {
 
 		retryBox.setVisible(!isExceptionPhoto(modality));
 		thresholdBox.setVisible(!isExceptionPhoto(modality) && isQualityCheckWithSdkEnabled());
-		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
+//		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
 
 		biometricBox.setVisible(true);
 		biometricType.setText(applicationLabelBundle.getString(modality.name()));
@@ -329,7 +325,7 @@ public class GenericBiometricsController extends BaseController {
 		checkBoxTitle.setText(applicationLabelBundle.getString("exceptionCheckBoxPaneLabel"));
 		exceptionImgVBox.setAlignment(Pos.CENTER);
 		exceptionImgVBox.getChildren().addAll(checkBoxTitle);
-		checkBoxTitle.getStyleClass().add("demoGraphicFieldLabel");
+		checkBoxTitle.getStyleClass().add("bioGraphicFieldLabel");
 
 		exceptionImgVBox.getChildren().add(
 				getExceptionImagePane(currentModality, configBioAttributes, nonConfigBioAttributes, fxControl.getUiSchemaDTO().getId()));
@@ -669,6 +665,8 @@ public class GenericBiometricsController extends BaseController {
 						getRegistrationDTOFromSession().BIO_CAPTURES.put(String.format("%s_%s_%s",
 								fieldId, dto.getBioAttribute(), retry),
 								FingerDecoder.convertFingerISOToImageBytes(convertRequestDto));
+						getRegistrationDTOFromSession().INDIVIDUAL_BIO_SCORE.put(String.format("%s_%s_%s",
+								fieldId, dto.getBioAttribute(), retry), dto.getQualityScore());
 						score += dto.getQualityScore();
 						sdkScore += dto.getSdkScore();
 					}
@@ -687,6 +685,8 @@ public class GenericBiometricsController extends BaseController {
 						getRegistrationDTOFromSession().BIO_CAPTURES.put(String.format("%s_%s_%s",
 								fieldId, dto.getBioAttribute(), retry),
 								IrisDecoder.convertIrisISOToImageBytes(convertRequestDto));
+						getRegistrationDTOFromSession().INDIVIDUAL_BIO_SCORE.put(String.format("%s_%s_%s",
+								fieldId, dto.getBioAttribute(), retry), dto.getQualityScore());
 						score += dto.getQualityScore();
 						sdkScore += dto.getSdkScore();
 					}
@@ -707,6 +707,8 @@ public class GenericBiometricsController extends BaseController {
 					getRegistrationDTOFromSession().BIO_CAPTURES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.getAttributes().get(0), retry),
 							FaceDecoder.convertFaceISOToImageBytes(convertRequestDto));
+					getRegistrationDTOFromSession().INDIVIDUAL_BIO_SCORE.put(String.format("%s_%s_%s",
+							fieldId, modalityName.getAttributes().get(0), retry), faceDto.getQualityScore());
 					getRegistrationDTOFromSession().BIO_SCORES.put(String.format("%s_%s_%s",
 							fieldId, modalityName.name(), retry),
 							faceDto.getQualityScore());
@@ -811,10 +813,71 @@ public class GenericBiometricsController extends BaseController {
 
 		// Get the stream image from Bio ServiceImpl and load it in the image pane
 		biometricImage.setImage(getBioStreamImage(fieldId, modality, retry));
+		displayIndividualBioScore(fieldId, modality, retry);
+
+	}
+	public boolean isDisplayIndividualBioScoreRequired() {
+		String configValue = String.valueOf(ApplicationContext.map().get(RegistrationConstants.DISPLAY_INDIVIDUAL_BIO_SCORE));
+		return configValue == "F" ? false : true;
+	}
+
+	private void displayIndividualBioScore(String fieldId, Modality modality, int retry) {
+		if (isDisplayIndividualBioScoreRequired() && modality != Modality.EXCEPTION_PHOTO) {
+			biometricPane.getChildren().clear();
+			StackPane stackPane = new StackPane();
+			stackPane.getChildren().add(biometricImage);
+			if (retry > 0) {
+				HBox qualityBox = new HBox();
+				StackPane.setAlignment(qualityBox, Pos.TOP_CENTER);
+				qualityBox.getStyleClass().add("individual-quality-box");
+				qualityBox.setPrefHeight(50);
+				qualityBox.setMaxHeight(Region.USE_PREF_SIZE);
+				getQualityScoreLabels(fieldId, modality, retry, qualityBox);
+				stackPane.getChildren().addAll(qualityBox);
+			}
+			biometricPane.getChildren().add(stackPane);
+		} else {
+			biometricPane.getChildren().clear();
+			biometricPane.getChildren().add(biometricImage);
+		}
+	}
+
+	private void getQualityScoreLabels(String fieldId, Modality modality, int attempt, HBox qualityBox) {
+		List<byte[]> images = new LinkedList<>();
+		addSpacer(qualityBox, modality);
+		double thresholdValue = bioService.getMDMQualityThreshold(currentModality);
+		for(String attribute : modality.getAttributes()) {
+			Double score = 0.0;
+			if (getRegistrationDTOFromSession().INDIVIDUAL_BIO_SCORE.containsKey(String.format("%s_%s_%s", fieldId,
+					attribute, attempt))) {
+				score = getRegistrationDTOFromSession().INDIVIDUAL_BIO_SCORE.get(String.format("%s_%s_%s", fieldId,
+						attribute, attempt));
+			}
+			String scoreStyleClass = "green-rounded-label";
+			if (score.equals(0.0)) {
+				scoreStyleClass = "white-rounded-label";
+			} else if (score < thresholdValue) {
+				scoreStyleClass = "red-rounded-label";
+			}
+			String displayScore = String.valueOf(score);
+			Label label = new Label(displayScore);
+			label.getStyleClass().add(scoreStyleClass);
+			qualityBox.getChildren().add(label);
+			addSpacer(qualityBox, modality);
+		}
+	}
+
+	private void addSpacer(HBox qualityBox, Modality modality) {
+		if (modality != Modality.FACE) {
+			Region spacer = new Region();
+			HBox.setHgrow(spacer, Priority.ALWAYS);
+			qualityBox.getChildren().add(spacer);
+		}
 	}
 
 
-	private String getCaptureTimeOut() {
+
+			private String getCaptureTimeOut() {
 		/* Get Configued capture timeOut */
 		return getValueFromApplicationContext(RegistrationConstants.CAPTURE_TIME_OUT);
 	}
