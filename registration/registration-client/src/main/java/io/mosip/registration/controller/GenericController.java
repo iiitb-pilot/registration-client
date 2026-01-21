@@ -8,8 +8,12 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import javafx.beans.binding.Bindings;
+import javafx.geometry.Insets;
 
 import io.mosip.kernel.core.idvalidator.exception.InvalidIDException;
 import io.mosip.kernel.core.idvalidator.spi.PridValidator;
@@ -139,8 +143,13 @@ public class GenericController extends BaseController {
 	@Autowired
 	private PridValidator<String> pridValidatorImpl;
 
+	private TextField registrationNumberTextField;
+
 	@Autowired
 	private PreRegistrationDataSyncService preRegistrationDataSyncService;
+
+	@Autowired
+	private QrCodePopUpViewController qrCodePopUpViewController;
 	
 	private static TreeMap<Integer, UiScreenDTO> orderedScreens = new TreeMap<>();
 	private static Map<String, FxControl> fxControlMap = new HashMap<String, FxControl>();
@@ -154,6 +163,10 @@ public class GenericController extends BaseController {
 
 	public static Map<String, FxControl> getFxControlMap() {
 		return fxControlMap;
+	}
+
+	public TextField getRegistrationNumberTextField() {
+		return registrationNumberTextField;
 	}
 	
 	public void disableAuthenticateButton(boolean disable) {
@@ -201,18 +214,31 @@ public class GenericController extends BaseController {
 		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.setSpacing(20);
 		hBox.setPrefHeight(100);
-		hBox.setPrefWidth(200);
+		hBox.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP);
+		hBox.setPadding(new Insets(20, 0, 20, 0));
+
 
 		Label label = new Label();
 		label.getStyleClass().add(LABEL_CLASS);
 		label.setId("preRegistrationLabel");
-		label.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
-				.getString("search_for_Pre_registration_id"));
+		List<String> labels = new ArrayList<>();
+		getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().forEach(lCode -> {
+			labels.add(ApplicationContext.getBundle(lCode, RegistrationConstants.LABELS)
+					.getString("search_for_Pre_registration_id"));
+		});
+		String labelText = String.join(RegistrationConstants.SLASH, labels);
+		label.setText(labelText);
+		label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
+		label.setPadding(new Insets(0, 0, 0, 55));
 		hBox.getChildren().add(label);
+		HBox innerHBox = new HBox();
+		innerHBox.setAlignment(Pos.CENTER_LEFT);
+		innerHBox.setSpacing(0);
+		innerHBox.setPrefHeight(100);
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
 		textField.getStyleClass().add(TEXTFIELD_CLASS);
-		hBox.getChildren().add(textField);
+		this.registrationNumberTextField = textField;
 		Button button = new Button();
 		button.setId("fetchBtn");
 		button.getStyleClass().add("demoGraphicPaneContentButton");
@@ -223,6 +249,23 @@ public class GenericController extends BaseController {
 			executePreRegFetchTask(textField);
 		});
 
+		if(RegistrationConstants.ENABLE.equalsIgnoreCase((String) ApplicationContext.map()
+				.getOrDefault(RegistrationConstants.REGCLIENT_QR_CODE_SCAN_ENABLE, RegistrationConstants.ENABLE))) {
+			Button scanQRbutton = new Button();
+			scanQRbutton.setId("scanQRBtn");
+			scanQRbutton.setGraphic(new ImageView(
+					new Image(this.getClass().getResourceAsStream(RegistrationConstants.QR_CODE), 25, 25, true, true)));
+			scanQRbutton.getStyleClass().add("demoGraphicPaneContentButton");
+			scanQRbutton.setOnAction(event -> {
+				executeQRCodeScan();
+			});
+
+			innerHBox.getChildren().add(scanQRbutton);
+		}
+
+		innerHBox.getChildren().add(textField);
+
+		hBox.getChildren().add(innerHBox);
 		hBox.getChildren().add(button);
 		progressIndicator = new ProgressIndicator();
 		progressIndicator.setId("progressIndicator");
@@ -231,7 +274,47 @@ public class GenericController extends BaseController {
 		return hBox;
 	}
 
-	private void executePreRegFetchTask(TextField textField) {
+	private void executeQRCodeScan() {
+		genericScreen.setDisable(true);
+
+		Service<Void> taskService = new Service<Void>() {
+			@Override
+			protected Task<Void> createTask() {
+				return new Task<Void>() {
+					/*
+					 * (non-Javadoc)
+					 *
+					 * @see javafx.concurrent.Task#call()
+					 */
+					@Override
+					protected Void call() {
+						Platform.runLater(() -> {
+							qrCodePopUpViewController.init(RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.SCAN_QR_CODE_TITLE));
+						});
+						return null;
+					}
+				};
+			}
+		};
+
+		taskService.start();
+		taskService.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent workerStateEvent) {
+				genericScreen.setDisable(false);
+			}
+		});
+		taskService.setOnFailed(new EventHandler<WorkerStateEvent>() {
+			@Override
+			public void handle(WorkerStateEvent t) {
+				LOGGER.debug("QR code scan failed");
+				genericScreen.setDisable(false);
+			}
+		});
+
+	}
+
+	protected void executePreRegFetchTask(TextField textField) {
 		genericScreen.setDisable(true);
 		progressIndicator.setVisible(true);
 
@@ -749,10 +832,27 @@ public class GenericController extends BaseController {
 			}
 
 			for(Entry<String, List<UiFieldDTO>> groupEntry : screenFieldGroups.entrySet()) {
-				FlowPane groupFlowPane = new FlowPane();
+				GridPane groupFlowPane = new GridPane();
 				groupFlowPane.prefWidthProperty().bind(gridPane.widthProperty());
 				groupFlowPane.setHgap(20);
 				groupFlowPane.setVgap(20);
+				if(screenDTO.getName().equals("DemographicDetails")) {
+					groupFlowPane.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP);
+					groupFlowPane.setPadding(new Insets(20, 0, 20, 0));
+
+					ColumnConstraints leftColumn = new ColumnConstraints();
+					leftColumn.setPercentWidth(50);
+					ColumnConstraints rightColumn = new ColumnConstraints();
+					rightColumn.setPercentWidth(50);
+					groupFlowPane.getColumnConstraints().addAll(leftColumn, rightColumn);
+
+					/* Adding Group label */
+					Label label = new Label(groupEntry.getKey());
+					label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
+					label.setPadding(new Insets(0, 0, 0, 55));
+					groupFlowPane.add(label, 0, 0, 2, 1);
+				}
+				int fieldIndex=0;
 
 				for(UiFieldDTO fieldDTO : groupEntry.getValue()) {
 					try {
@@ -760,10 +860,26 @@ public class GenericController extends BaseController {
 						if(fxControl.getNode() instanceof GridPane) {
 							((GridPane)fxControl.getNode()).prefWidthProperty().bind(groupFlowPane.widthProperty());
 						}
-						groupFlowPane.getChildren().add(fxControl.getNode());
+						if(screenDTO.getName().equals("DemographicDetails")) {
+							fxControl.getNode().getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_FIELD);
+							groupFlowPane.add( fxControl.getNode(), (fieldIndex % 2), (fieldIndex / 2) + 1);
+							fieldIndex++;
+						} else {
+							if(screenDTO.getName().equals("Documents")) {
+								fxControl.getNode().getStyleClass().add(RegistrationConstants.DOCUMENT_COMBOBOX_FIELD);
+							}
+							groupFlowPane.getChildren().add(fxControl.getNode());
+						}
 					} catch (Exception exception){
 						LOGGER.error("Failed to build control " + fieldDTO.getId(), exception);
 					}
+				}
+				//Hide introducer grouping for adults
+				if(groupEntry.getKey().equals("Introducer")) {
+					groupFlowPane.visibleProperty().bind(Bindings.or(
+							groupFlowPane.getChildren().get(1).visibleProperty(),
+							groupFlowPane.getChildren().get(2).visibleProperty())
+					);
 				}
 				gridPane.add(groupFlowPane, 0, rowIndex++);
 			}
