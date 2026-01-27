@@ -16,10 +16,10 @@ import lombok.NoArgsConstructor;
 /**
  * This class is a DTO which parses with UI Spec json, which decides of how
  * the UI element should be displayed and validated.
- * 
+ *
  * And also it contains the validators to validate the respective UI element,
  * label name,controlType, format,whether it is required or not.
- * 
+ *
  * @author YASWANTH S
  *
  */
@@ -64,6 +64,9 @@ public class UiFieldDTO {
 	@JsonProperty("exceptionPhotoRequired")
 	private boolean isExceptionPhotoRequired;
 	private boolean handle;
+	@JsonProperty("verifyEnabled")
+	private boolean verifyEnabled;
+	private String verifyButtonLabel;
 
 
 	/**
@@ -74,5 +77,11 @@ public class UiFieldDTO {
 		return isExceptionPhotoRequired ||
 				(subType != null && RegistrationConstants.APPLICANT.equalsIgnoreCase(subType));
 	}
+	public String getVerifyButtonLabel() {
+		return verifyButtonLabel != null && !verifyButtonLabel.isBlank()
+				? verifyButtonLabel
+				: "Verify";
+	}
+
 
 }
