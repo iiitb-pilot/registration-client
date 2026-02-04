@@ -300,6 +300,27 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 	private void setMetaData(Map<String, String> metaInfoMap, RegistrationDTO registrationDTO)
 			throws RegBaseCheckedException {
 		Map<String, String> metaData = new LinkedHashMap<>();
+		Object metaFieldsObj = ApplicationContext.map().get(RegistrationConstants.META_INFO_FIELDS);
+		List<String> metaFields = (metaFieldsObj != null)
+						? Arrays.asList(metaFieldsObj.toString().split(","))
+						: new ArrayList<>();
+		Map<String, Object> demographics = registrationDTO.getDemographics();
+
+		for (String field : metaFields) {
+
+			String key = field.trim();
+
+			Object value = demographics.get(key);
+
+			if (value != null) {
+
+				String val = value.toString().trim();
+
+				if (!val.isEmpty()) {
+					metaData.put(key, val);
+				}
+			}
+		}
 		metaData.put(PacketManagerConstants.REGISTRATIONID, registrationDTO.getRegistrationId());
 		metaData.put(RegistrationConstants.PACKET_APPLICATION_ID, registrationDTO.getAppId());
 		metaData.put(PacketManagerConstants.META_CREATION_DATE, LocalDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter

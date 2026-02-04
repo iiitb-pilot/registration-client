@@ -2020,4 +2020,5 @@ public class RegistrationConstants {
 	/*Query Param*/
 	public static final String PARAM_ID="id";
 	public static final String PHONE_NO="phoneNumber";
+	public static final String META_INFO_FIELDS ="mosip.registration.meta.info.fields";
 }
