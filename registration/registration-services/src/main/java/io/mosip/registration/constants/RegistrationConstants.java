@@ -1752,6 +1752,7 @@ public class RegistrationConstants {
 	public static final String UI_SCHEMA_SUBTYPE_FULL_NAME = "name";
 	public static final String UI_SCHEMA_SUBTYPE_EMAIL = "Email";
 	public static final String UI_SCHEMA_SUBTYPE_PHONE = "Phone";
+	public static final String UI_SCHEMA_SUBTYPE_WHATSAPP="Whatsapp";
 	public static final String MVEL_TYPE = "MVEL";
 	public static final String MACHINE_VERIFICATION_SUCCESS = "Machine Verification Success";
 	public static final String UTC_APPENDER = " (UTC)";
@@ -2020,5 +2021,4 @@ public class RegistrationConstants {
 	/*Query Param*/
 	public static final String PARAM_ID="id";
 	public static final String PHONE_NO="phoneNumber";
-	public static final String META_INFO_FIELDS ="mosip.registration.meta.info.fields";
 }
