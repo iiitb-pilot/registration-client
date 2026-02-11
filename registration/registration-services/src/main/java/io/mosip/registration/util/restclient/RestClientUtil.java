@@ -61,23 +61,63 @@ public class RestClientUtil {
 	 * @throws RestClientException
 	 */
 	public Map<String, Object> invokeURL(RequestHTTPDTO requestHTTPDTO) throws RestClientException {
+
+		System.out.println("========== REG-CLIENT API REQUEST ==========");
+
+		System.out.println("URL : " + requestHTTPDTO.getUri());
+
+		System.out.println("HTTP METHOD : " + requestHTTPDTO.getHttpMethod());
+
+		System.out.println("HEADERS : ");
+		requestHTTPDTO.getHttpHeaders().forEach((k, v) -> {
+			System.out.println("   " + k + " = " + v);
+		});
+
+		System.out.println("BODY : ");
+		if (requestHTTPDTO.getRequestBody() != null) {
+			System.out.println(requestHTTPDTO.getRequestBody());
+		} else {
+			System.out.println("   No Body");
+		}
+
+		System.out.println("===========================================");
+
+
 		LOGGER.debug("invoke method called {} ", requestHTTPDTO.getUri());
+
 		Map<String, Object> responseMap = null;
 
 		plainRestTemplate.setRequestFactory(getHttpRequestFactory());
-		ResponseEntity<?> responseEntity = plainRestTemplate.exchange(requestHTTPDTO.getUri(), requestHTTPDTO.getHttpMethod(),
-				requestHTTPDTO.getHttpEntity(), requestHTTPDTO.getClazz());
-		
+
+		ResponseEntity<?> responseEntity =
+				plainRestTemplate.exchange(
+						requestHTTPDTO.getUri(),
+						requestHTTPDTO.getHttpMethod(),
+						requestHTTPDTO.getHttpEntity(),
+						requestHTTPDTO.getClazz()
+				);
+
 		if (responseEntity != null && responseEntity.hasBody()) {
+
+			System.out.println("========== REG-CLIENT API RESPONSE ==========");
+			System.out.println("STATUS : " + responseEntity.getStatusCode());
+
+			System.out.println("RESPONSE BODY : ");
+			System.out.println(responseEntity.getBody());
+
+			System.out.println("===========================================");
+
 			responseMap = new LinkedHashMap<>();
 			responseMap.put(RegistrationConstants.REST_RESPONSE_BODY, responseEntity.getBody());
 			responseMap.put(RegistrationConstants.REST_RESPONSE_HEADERS, responseEntity.getHeaders());
 		}
 
 		LOGGER.debug("invoke method ended {} ", requestHTTPDTO.getUri());
+
 		return responseMap;
 	}
-	
+
+
 
 	public Map<String, Object> invokeForToken(RequestHTTPDTO requestHTTPDTO)
 			throws RestClientException {
