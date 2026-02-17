@@ -49,7 +49,7 @@ public class ClientIntegrityValidatorTest {
 	}
 
 	@Test
-	@Ignore("Certificate expired - needs to be updated. See ticket #MOSIP-1234")
+	@Ignore("Certificate expired - needs to be updated.")
 	public void integrityCheckTest() throws IOException {
 		URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.2.0-SNAPSHOT.jar");
 		X509Certificate certificate = ClientIntegrityValidator.getCertificate();

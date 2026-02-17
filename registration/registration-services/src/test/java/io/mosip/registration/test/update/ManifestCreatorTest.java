@@ -57,7 +57,7 @@ public class ManifestCreatorTest extends ManifestCreator {
 
 
     @Test
-    @Ignore("Certificate expired - needs to be updated. See ticket #MOSIP-1234")
+    @Ignore("Certificate expired - needs to be updated.")
     public void integrityCheckTest() throws IOException {
         URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.2.0-SNAPSHOT.jar");
         X509Certificate certificate =  ClientIntegrityValidator.getCertificate();
@@ -66,7 +66,7 @@ public class ManifestCreatorTest extends ManifestCreator {
     }
 
     @Test(expected = SecurityException.class)
-    @Ignore("Certificate expired - needs to be updated. See ticket #MOSIP-1234")
+    @Ignore("Certificate expired - needs to be updated.")
     public void integrityCheckTest2() throws IOException {
         URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.2.0-SNAPSHOT.jar");
         JarFile jarFile = new JarFile(url.getFile());
