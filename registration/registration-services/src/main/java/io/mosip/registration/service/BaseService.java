@@ -388,7 +388,6 @@ public class BaseService {
 				statusDTO.setName(registrationDataDto.getName());
 				statusDTO.setPhone(registrationDataDto.getPhone());
 				statusDTO.setEmail(registrationDataDto.getEmail());
-				statusDTO.setWhatsappNumber(registrationDataDto.getWhatsappNumber());
 				statusDTO.setSelectedLanguages(registrationDataDto.getLangCode());
 			}
 		} catch (JsonParseException | JsonMappingException | io.mosip.kernel.core.exception.IOException exception) {
