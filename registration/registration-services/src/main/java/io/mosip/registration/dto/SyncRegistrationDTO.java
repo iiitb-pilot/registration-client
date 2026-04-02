@@ -24,5 +24,4 @@ public class SyncRegistrationDTO {
 	private String name;
 	private String phone;
 	private String email;
-	private String whatsappNumber;
 }
