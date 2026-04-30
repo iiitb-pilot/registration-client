@@ -310,28 +310,39 @@ public class DropDownFxControl extends FxControl {
 	@Override
 	public void fillData(Object data) {
 
-		if (data != null) {
+		Map<String, List<GenericDto>> val = (Map<String, List<GenericDto>>) data;
 
-			Map<String, List<GenericDto>> val = (Map<String, List<GenericDto>>) data;
+		List<GenericDto> items = Collections.emptyList();
 
-			List<GenericDto> items = val.get(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
-
-			if (items != null && !items.isEmpty()) {
-				setItems((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), items);
-			}
-
+		if (val != null) {
+			items = val.get(getRegistrationDTo().getSelectedLanguagesByApplicant().get(0));
 		}
+
+		// Always call setItems
+		setItems((ComboBox<GenericDto>) getField(uiFieldDTO.getId()), items);
 	}
 
+
 	private void setItems(ComboBox<GenericDto> comboBox, List<GenericDto> val) {
-		if (comboBox != null && val != null && !val.isEmpty()) {
+		if (comboBox != null) {
+
+			// Always clear old items
 			comboBox.getItems().clear();
-			comboBox.getItems().addAll(val);
 
-			new ComboBoxAutoComplete<GenericDto>(comboBox);
-			
-			comboBox.hide();
+			// Clear label (message below dropdown)
+			Label messageLabel = (Label) getField(uiFieldDTO.getId() + RegistrationConstants.MESSAGE);
+			if (messageLabel != null) {
+				messageLabel.setText("");
+			}
 
+			// Only add if data exists
+			if (val != null && !val.isEmpty()) {
+				comboBox.getItems().addAll(val);
+
+				new ComboBoxAutoComplete<GenericDto>(comboBox);
+
+				comboBox.hide();
+			}
 		}
 	}
 
