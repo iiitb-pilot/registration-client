@@ -26,7 +26,7 @@ public class ScannerStubImpl implements DocScannerService {
     private static int index = 0;
 
     static {
-        DOC_STUB_PATHS.add("/images/morena_img.BMP");
+        DOC_STUB_PATHS.add("/images/morena_img.png");
         DOC_STUB_PATHS.add("/images/stubdoc.png");
 
     }
@@ -54,7 +54,12 @@ public class ScannerStubImpl implements DocScannerService {
 
     @Override
     public List<DocScanDevice> getConnectedDevices() {
-      return  Collections.emptyList();
+        DocScanDevice docScanDevice = new DocScanDevice();
+        docScanDevice.setServiceName(getServiceName());
+        docScanDevice.setDeviceType(DeviceType.SCANNER);
+        docScanDevice.setName(DEVICE_NAME);
+        docScanDevice.setId(DEVICE_NAME);
+        return Arrays.asList(docScanDevice);
     }
 
     @Override
