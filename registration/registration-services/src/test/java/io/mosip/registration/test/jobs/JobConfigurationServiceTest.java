@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.registration.context.SessionContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +57,7 @@ import io.mosip.registration.service.config.impl.JobConfigurationServiceImpl;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*"})
-@PrepareForTest({ io.mosip.registration.jobs.BaseJob.class })
+@PrepareForTest({ BaseJob.class, SessionContext.class })
 public class JobConfigurationServiceTest {
 
 	@Mock
@@ -404,6 +405,12 @@ public class JobConfigurationServiceTest {
 
 	@Test
 	public void executeAllJobsTest() throws SchedulerException {
+		PowerMockito.mockStatic(SessionContext.class);
+		Mockito.when(SessionContext.isSessionContextAvailable()).thenReturn(false);
+		List<SyncTransaction> syncTransactions = new LinkedList<>();
+		syncTransactions.add(new SyncTransaction());
+		Mockito.when(syncJobTransactionDAO.getAll(Mockito.anyString(), Mockito.any(Timestamp.class),
+				Mockito.any(Timestamp.class))).thenReturn(syncTransactions);
 		ResponseDTO responseDTO = new ResponseDTO();
 		SuccessResponseDTO successResponseDTO = new SuccessResponseDTO();
 		Map<String, Object> otherAttributes = new HashMap<>();
