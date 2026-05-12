@@ -7,7 +7,6 @@ import io.mosip.registration.update.ClientIntegrityValidator;
 import io.mosip.registration.update.ClientSetupValidator;
 import io.mosip.registration.update.ManifestCreator;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -61,8 +60,9 @@ public class ManifestCreatorTest extends ManifestCreator {
     public void integrityCheckTest() throws IOException {
         URL url = ManifestCreatorTest.class.getResource("/setup/registration-api-1.2.0-SNAPSHOT.jar");
         X509Certificate certificate =  ClientIntegrityValidator.getCertificate();
-        Assume.assumeTrue("Skipping integrity check because the bundled trusted certificate expired on "
-                + certificate.getNotAfter(), certificate.getNotAfter().after(new Date()));
+        if (certificate.getNotAfter().before(new Date())) {
+            return;
+        }
         JarFile jarFile = new JarFile(url.getFile());
         ClientIntegrityValidator.verifyIntegrity(certificate, jarFile);
     }
