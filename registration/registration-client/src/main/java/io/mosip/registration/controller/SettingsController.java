@@ -62,7 +62,7 @@ public class SettingsController extends BaseController {
 
 	@Autowired
 	private DeviceSettingsController deviceSettingsController;
-
+	
 	@Autowired
 	private GenericController genericController;
 
@@ -71,7 +71,7 @@ public class SettingsController extends BaseController {
 	public void init(List<SettingsSchema> settingsByRole) {
 		try {
 			LOGGER.info("Opening pop-up screen to show Settings Page");
-
+			
 			if (genericController.getKeyboardStage() != null && genericController.getKeyboardStage().isShowing()) {
 				genericController.getKeyboardStage().close();
 			}
@@ -183,14 +183,14 @@ public class SettingsController extends BaseController {
 
 	private HBox getShortCut(String controllerName, String shortcutIcon) {
 		switch (controllerName) {
-			case "ScheduledJobsSettingsController":
-				return scheduledJobsSettingsController.getShortCut(shortcutIcon);
-			case "GlobalConfigSettingsController":
-				return globalConfigSettingsController.getShortCut(shortcutIcon);
-			case "DeviceSettingsController":
-				return deviceSettingsController.getShortCut(shortcutIcon);
-			default:
-				return null;
+		case "ScheduledJobsSettingsController":
+			return scheduledJobsSettingsController.getShortCut(shortcutIcon);
+		case "GlobalConfigSettingsController":
+			return globalConfigSettingsController.getShortCut(shortcutIcon);
+		case "DeviceSettingsController":
+			return deviceSettingsController.getShortCut(shortcutIcon);
+		default:
+			return null;
 		}
 	}
 
@@ -220,15 +220,15 @@ public class SettingsController extends BaseController {
 
 	private void setHeader(String className, String headerLabel) {
 		switch (className) {
-			case "ScheduledJobsSettingsController":
-				scheduledJobsSettingsController.setHeaderLabel(headerLabel);
-				break;
-			case "GlobalConfigSettingsController":
-				globalConfigSettingsController.setHeaderLabel(headerLabel);
-				break;
-			case "DeviceSettingsController":
-				deviceSettingsController.setHeaderLabel(headerLabel);
-				break;
+		case "ScheduledJobsSettingsController":
+			scheduledJobsSettingsController.setHeaderLabel(headerLabel);
+			break;
+		case "GlobalConfigSettingsController":
+			globalConfigSettingsController.setHeaderLabel(headerLabel);
+			break;
+		case "DeviceSettingsController":
+			deviceSettingsController.setHeaderLabel(headerLabel);
+			break;
 		}
 	}
 
