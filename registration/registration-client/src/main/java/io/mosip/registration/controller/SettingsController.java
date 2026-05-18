@@ -62,7 +62,7 @@ public class SettingsController extends BaseController {
 
 	@Autowired
 	private DeviceSettingsController deviceSettingsController;
-	
+
 	@Autowired
 	private GenericController genericController;
 
@@ -71,7 +71,7 @@ public class SettingsController extends BaseController {
 	public void init(List<SettingsSchema> settingsByRole) {
 		try {
 			LOGGER.info("Opening pop-up screen to show Settings Page");
-			
+
 			if (genericController.getKeyboardStage() != null && genericController.getKeyboardStage().isShowing()) {
 				genericController.getKeyboardStage().close();
 			}
@@ -183,29 +183,35 @@ public class SettingsController extends BaseController {
 
 	private HBox getShortCut(String controllerName, String shortcutIcon) {
 		switch (controllerName) {
-		case "ScheduledJobsSettingsController":
-			return scheduledJobsSettingsController.getShortCut(shortcutIcon);
-		case "GlobalConfigSettingsController":
-			return globalConfigSettingsController.getShortCut(shortcutIcon);
-		case "DeviceSettingsController":
-			return deviceSettingsController.getShortCut(shortcutIcon);
-		default:
-			return null;
+			case "ScheduledJobsSettingsController":
+				return scheduledJobsSettingsController.getShortCut(shortcutIcon);
+			case "GlobalConfigSettingsController":
+				return globalConfigSettingsController.getShortCut(shortcutIcon);
+			case "DeviceSettingsController":
+				return deviceSettingsController.getShortCut(shortcutIcon);
+			default:
+				return null;
 		}
 	}
 
 	private void loadFXML(String fxmlName, String headerLabel) {
 		LOGGER.info("Loading {} screen started.", fxmlName);
 		try {
-			exitWindow();
+			boolean popupResponse=true;
+
 			if (getRegistrationDTOFromSession() != null) {
-				goToSettingsFromRegistration();
+				popupResponse=goToSettingsFromRegistration();
 			}
-			FXMLLoader fxmlLoader = BaseController
-					.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
-			Parent root = fxmlLoader.load();
-			setHeader(fxmlLoader.getController().getClass().getSimpleName(), headerLabel);
-			getScene(root);
+			if(popupResponse) {
+
+
+				exitWindow();
+				FXMLLoader fxmlLoader = BaseController
+						.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
+				Parent root = fxmlLoader.load();
+				setHeader(fxmlLoader.getController().getClass().getSimpleName(), headerLabel);
+				getScene(root);
+			}
 		} catch (IOException ioException) {
 			LOGGER.error("Exception in loading settings", ioException);
 		}
@@ -214,15 +220,15 @@ public class SettingsController extends BaseController {
 
 	private void setHeader(String className, String headerLabel) {
 		switch (className) {
-		case "ScheduledJobsSettingsController":
-			scheduledJobsSettingsController.setHeaderLabel(headerLabel);
-			break;
-		case "GlobalConfigSettingsController":
-			globalConfigSettingsController.setHeaderLabel(headerLabel);
-			break;
-		case "DeviceSettingsController":
-			deviceSettingsController.setHeaderLabel(headerLabel);
-			break;
+			case "ScheduledJobsSettingsController":
+				scheduledJobsSettingsController.setHeaderLabel(headerLabel);
+				break;
+			case "GlobalConfigSettingsController":
+				globalConfigSettingsController.setHeaderLabel(headerLabel);
+				break;
+			case "DeviceSettingsController":
+				deviceSettingsController.setHeaderLabel(headerLabel);
+				break;
 		}
 	}
 
