@@ -203,8 +203,6 @@ public class SettingsController extends BaseController {
 				popupResponse=goToSettingsFromRegistration();
 			}
 			if(popupResponse) {
-
-
 				exitWindow();
 				FXMLLoader fxmlLoader = BaseController
 						.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
