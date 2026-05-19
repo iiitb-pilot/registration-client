@@ -634,9 +634,11 @@ public class BaseController {
 	/**
 	 * Opens the home page screen.
 	 */
-	public void goToSettingsFromRegistration() {
+	public boolean goToSettingsFromRegistration() {
+		boolean navigationResponse=false;
 		try {
 			if (isAckOpened() || pageNavigantionAlert()) {
+				navigationResponse=true;
 				setIsAckOpened(false);
 				if (!(boolean) SessionContext.map().get(RegistrationConstants.ONBOARD_USER)) {
 					clearOnboardData();
@@ -653,6 +655,7 @@ public class BaseController {
 					runtimException.getMessage() + ExceptionUtils.getStackTrace(runtimException));
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.getMessageLanguageSpecific(RegistrationUIConstants.UNABLE_LOAD_HOME_PAGE));
 		}
+		return navigationResponse;
 	}
 
 	/**
