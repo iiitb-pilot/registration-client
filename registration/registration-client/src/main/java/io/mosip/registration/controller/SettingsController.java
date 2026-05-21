@@ -197,20 +197,16 @@ public class SettingsController extends BaseController {
 	private void loadFXML(String fxmlName, String headerLabel) {
 		LOGGER.info("Loading {} screen started.", fxmlName);
 		try {
-			boolean popupResponse=true;
-
-			if (getRegistrationDTOFromSession() != null) {
-				popupResponse=goToSettingsFromRegistration();
+			exitWindow();
+			if (getRegistrationDTOFromSession() != null && !goToSettingsFromRegistration()) {
+				return;
 			}
-			if(popupResponse) {
-				exitWindow();
-				FXMLLoader fxmlLoader = BaseController
-						.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
+			FXMLLoader fxmlLoader = BaseController.loadChild(getClass().getResource(RegistrationConstants.FXML_PATH.concat(fxmlName)));
 				Parent root = fxmlLoader.load();
 				setHeader(fxmlLoader.getController().getClass().getSimpleName(), headerLabel);
 				getScene(root);
 			}
-		} catch (IOException ioException) {
+		 catch (IOException ioException) {
 			LOGGER.error("Exception in loading settings", ioException);
 		}
 		LOGGER.info("Loading {} screen ended.", fxmlName);
