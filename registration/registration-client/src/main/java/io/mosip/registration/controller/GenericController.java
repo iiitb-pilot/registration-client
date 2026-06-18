@@ -905,7 +905,12 @@ public class GenericController<uiFieldDTO> extends BaseController {
 					}
 				}
 				//Hide introducer grouping for adults
-				if(groupEntry.getKey().equals("Introducer")) {
+				boolean isIntroducerGroup =
+						groupEntry.getValue().stream()
+								.anyMatch(field ->
+										"introducer".equalsIgnoreCase(field.getAlignmentGroup()));
+
+				if(isIntroducerGroup) {
 					groupFlowPane.visibleProperty().bind(Bindings.or(
 							groupFlowPane.getChildren().get(1).visibleProperty(),
 							groupFlowPane.getChildren().get(2).visibleProperty())
