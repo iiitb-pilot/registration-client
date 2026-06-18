@@ -298,6 +298,11 @@ public class GenericBiometricsController extends BaseController {
 				.collect(Collectors.joining(" / "));
 
 		biometricType.setText(bioTypeLabel);
+		if (getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().size() > 2) {
+			biometricType.setStyle("-fx-font-size: 1.0em; -fx-padding: 0px 0px 0px 10px;");
+		} else {
+			biometricType.setStyle("");
+		}
 		checkBoxPane.getChildren().clear();
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
