@@ -70,7 +70,7 @@ public class DOBAgeFxControl extends FxControl {
 
 		HBox dobHBox = new HBox();
 		dobHBox.setId(uiFieldDTO.getId() + RegistrationConstants.HBOX);
-		dobHBox.setSpacing(10);
+		dobHBox.setSpacing(4);
 
 		String mandatorySuffix = getMandatorySuffix(uiFieldDTO);
 
@@ -138,15 +138,25 @@ public class DOBAgeFxControl extends FxControl {
 		VBox dateVBox = new VBox();
 		dateVBox.setId(uiFieldDTO.getId() + dd + RegistrationConstants.VBOX);
 
-		double prefWidth = dateVBox.getPrefWidth();
+		dateVBox.getChildren().add(getLabel(
+				uiFieldDTO.getId() + dd + RegistrationConstants.LABEL,
+				text,
+				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL,
+				false,
+				48
+		));
+		TextField textField = getTextField(
+				uiFieldDTO.getId() + dd + RegistrationConstants.TEXT_FIELD,
+				text,
+				RegistrationConstants.DEMOGRAPHIC_TEXTFIELD,
+				48,
+				false
+		);
 
-		/** DOB Label */
-		dateVBox.getChildren().add(getLabel(uiFieldDTO.getId() + dd + RegistrationConstants.LABEL, text,
-				RegistrationConstants.DEMOGRAPHIC_FIELD_LABEL, false, prefWidth));
-
-		/** DOB Text Field */
-		dateVBox.getChildren().add(getTextField(uiFieldDTO.getId() + dd + RegistrationConstants.TEXT_FIELD, text,
-				RegistrationConstants.DEMOGRAPHIC_TEXTFIELD, prefWidth, false));
+		textField.setPrefWidth(48);
+		textField.setMinWidth(48);
+		textField.setMaxWidth(48);
+		dateVBox.getChildren().add(textField);
 
 		return dateVBox;
 	}
