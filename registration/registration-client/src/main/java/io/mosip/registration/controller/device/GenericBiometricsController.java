@@ -285,24 +285,7 @@ public class GenericBiometricsController extends BaseController {
 //		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
 
 		biometricBox.setVisible(true);
-		String bioTypeLabel = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().stream()
-				.map(langCode -> {
-					try {
-						return ApplicationContext
-								.getBundle(langCode, RegistrationConstants.LABELS)
-								.getString(modality.name());
-					} catch (MissingResourceException e) {
-						return modality.name();
-					}
-				})
-				.collect(Collectors.joining(" / "));
-
-		biometricType.setText(bioTypeLabel);
-		if (getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().size() > 2) {
-			biometricType.setStyle("-fx-font-size: 1.0em; -fx-padding: 0px 0px 0px 10px;");
-		} else {
-			biometricType.setStyle("");
-		}
+		biometricType.setText(applicationLabelBundle.getString(modality.name()));
 		checkBoxPane.getChildren().clear();
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
