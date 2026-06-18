@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javafx.scene.layout.*;
 import org.springframework.beans.factory.annotation.Autowired;

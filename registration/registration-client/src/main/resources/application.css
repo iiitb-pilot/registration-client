@@ -2775,6 +2775,13 @@ Working on new Css by taleev
 	-fx-font-weight: 900;
 	-fx-pref-width: 600px;
 }
+.preRegIdLabelTwoLanguages {
+    -fx-background-color: #ffffff;
+    -fx-border-width: 0;
+    -fx-text-fill: #020F59;
+    -fx-font-size: 1.3em;
+    -fx-font-weight: 900;
+}
 
 .demoGraphicCustomField{
 	-fx-pref-width: 50%;

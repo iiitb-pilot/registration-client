@@ -220,8 +220,10 @@ public class GenericController<uiFieldDTO> extends BaseController {
 		} else if(selectedLanguages.size()==3){
 			label.getStyleClass().add("preRegIdLabelThreeLanguages");
 			label.setPadding(new Insets(0, 0, 0, 55));
-		}
-		else {
+		}else if (selectedLanguages.size() == 2) {
+			label.getStyleClass().add("preRegIdLabelTwoLanguages");
+			label.setPadding(new Insets(0, 0, 0, 30));
+		} else {
 			label.getStyleClass().add(RegistrationConstants.DEMOGRAPHIC_GROUP_LABEL);
 			label.setPadding(new Insets(0, 0, 0, 55));
 		}
