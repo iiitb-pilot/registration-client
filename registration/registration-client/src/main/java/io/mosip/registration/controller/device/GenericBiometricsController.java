@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javafx.scene.layout.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -284,7 +285,19 @@ public class GenericBiometricsController extends BaseController {
 //		GridPane.setMargin(thresholdBox, new Insets(0, 0, isQualityCheckWithSdkEnabled() ? 50 : 0,0));
 
 		biometricBox.setVisible(true);
-		biometricType.setText(applicationLabelBundle.getString(modality.name()));
+		String bioTypeLabel = getRegistrationDTOFromSession().getSelectedLanguagesByApplicant().stream()
+				.map(langCode -> {
+					try {
+						return ApplicationContext
+								.getBundle(langCode, RegistrationConstants.LABELS)
+								.getString(modality.name());
+					} catch (MissingResourceException e) {
+						return modality.name();
+					}
+				})
+				.collect(Collectors.joining(" / "));
+
+		biometricType.setText(bioTypeLabel);
 		checkBoxPane.getChildren().clear();
 
 		// get List of captured Biometrics based on nonExceptionBio Attributes
