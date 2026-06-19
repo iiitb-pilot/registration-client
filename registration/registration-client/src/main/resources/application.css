@@ -684,7 +684,7 @@ Working on new Css by taleev
 }
 .preRegPlaceHolder {
 	-fx-pref-height: 35.0px;
-	-fx-pref-width: 180.0px;
+	-fx-pref-width: 160.0px;
 	-fx-translate-x: 30px;
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-border-color: #005baa;
@@ -814,7 +814,7 @@ Working on new Css by taleev
 	-fx-background-color: #FFFFFF;
 	-fx-border-radius: 3.0, 3.0, 3.0, 3.0;
 	-fx-font-size: 1.1em;
-	-fx-translate-x: 25px;
+	-fx-translate-x: 0px;
 }
 .fetchButton {
 	-fx-border-width: 1.0 1.0 1.0 1.0;
@@ -2771,7 +2771,7 @@ Working on new Css by taleev
 	-fx-background-color: #ffffff;
 	-fx-border-width: 0.0;
 	-fx-text-fill: #020F59;
-	-fx-font-size: 1.3em;
+	-fx-font-size: 1.1em;
 	-fx-font-weight: 900;
 	-fx-pref-width: 600px;
 }
@@ -2779,7 +2779,7 @@ Working on new Css by taleev
     -fx-background-color: #ffffff;
     -fx-border-width: 0;
     -fx-text-fill: #020F59;
-    -fx-font-size: 1.3em;
+    -fx-font-size: 1.2em;
     -fx-font-weight: 900;
 }
 

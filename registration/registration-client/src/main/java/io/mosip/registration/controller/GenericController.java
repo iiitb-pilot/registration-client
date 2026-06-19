@@ -231,18 +231,22 @@ public class GenericController<uiFieldDTO> extends BaseController {
 
 		HBox innerHBox = new HBox();
 		innerHBox.setAlignment(Pos.CENTER_LEFT);
-		innerHBox.setSpacing(0);
+		if (selectedLanguages.size() >=2) {
+			innerHBox.setSpacing(-20);
+		} else {
+			innerHBox.setSpacing(0);
+		}
 		innerHBox.setPrefHeight(100);
 
 		TextField textField = new TextField();
 		textField.setId("preRegistrationId");
-		String textFieldStyle = selectedLanguages.size() > 2 ? "preRegPlaceHolder" : TEXTFIELD_CLASS;
+		String textFieldStyle = selectedLanguages.size() >= 2 ? "preRegPlaceHolder" : TEXTFIELD_CLASS;
 		textField.getStyleClass().add(textFieldStyle);
 		this.registrationNumberTextField = textField;
 
 		Button button = new Button();
 		button.setId("fetchBtn");
-		String fetchButtonStyle = selectedLanguages.size() > 2 ? "fetchButton" : "demoGraphicPaneContentButton";
+		String fetchButtonStyle = selectedLanguages.size() >= 2 ? "fetchButton" : "demoGraphicPaneContentButton";
 		button.getStyleClass().add(fetchButtonStyle);
 		button.setText(ApplicationContext.getBundle(langCode, RegistrationConstants.LABELS)
 				.getString("fetch"));
