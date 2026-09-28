@@ -406,77 +406,73 @@ public class VirtualKeyboard {
 	}
 
 	public void changeControlOfKeyboard(TextField textField) {
+		/*
+		 * Physical keyboard input must never toggle TextField editability. The old
+		 * implementation manually fired a KEY_TYPED event, set the field non-editable
+		 * and re-enabled it later with Platform.runLater(). Under fast typing this
+		 * created a timing window in which a character could be ignored.
+		 *
+		 * Keep the locale-specific key mapping, but apply it to the native KEY_TYPED
+		 * event itself. This gives JavaFX exactly one insertion per physical key and
+		 * keeps the TextField editable continuously.
+		 */
+		final StringBuilder mappedPhysicalKey = new StringBuilder();
+
 		textField.setOnKeyPressed(new EventHandler<Event>() {
 			@Override
 			public void handle(Event event) {
-				if (!vkType.toString().contains("vk")) {
-					KeyEvent e = ((KeyEvent) event);
-					if (e.getCode().getName().equals("Caps Lock")) {
-						if (capsLock) {
-							capsLock = false;
-						} else {
-							capsLock = true;
-						}
+				if (vkType.toString().contains("vk")) {
+					return;
+				}
+
+				KeyEvent e = (KeyEvent) event;
+				mappedPhysicalKey.setLength(0);
+
+				if (e.getCode() == KeyCode.CAPS) {
+					capsLock = !capsLock;
+					return;
+				}
+
+				// Let JavaFX handle copy/paste/cut/select-all and other shortcuts normally.
+				if (e.isControlDown() || e.isAltDown() || e.isMetaDown()) {
+					return;
+				}
+
+				try {
+					boolean shifted = capsLock || e.isShiftDown();
+					String prefix = shifted ? "shift_" : "unshift_";
+					String key = keyboard.getString(prefix + e.getCode().getName().replaceAll("\\s", ""));
+					if (key != null) {
+						mappedPhysicalKey.append(key);
 					}
-					if (e.getCode().getName().equals("Shift")) {
-						keyEvent = e;
-					}					
-					
-					textField.setOnKeyReleased(new EventHandler<KeyEvent>() {
-			            @Override
-			            public void handle(KeyEvent event) {
-			                switch (event.getCode()) {			                   
-			                    case SHIFT:
-			                    	keyEvent = null;
-							default:
-								break;
-			                }
-			            }
-			        });
-					
-					String key;
-					if (capsLock || (keyEvent != null ? keyEvent.getCode() != null && keyEvent.getCode().getName() != null && keyEvent.getCode().getName().equals("Shift") : false)) {
-						try {
-							key = keyboard.getString("shift_" + e.getCode().getName().replaceAll("\\s", ""));
-						} catch (MissingResourceException exception) {
-							LOGGER.error("Virtual Keyboard", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									exception.getMessage());
-							key = null;
-						}
-						if (key != null) {
-							textField.fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, key, e.getCode().getName(),
-									e.getCode(), false, false, false, false));
-							textField.setEditable(false);
-						}
-					} else {
-						try {
-							key = keyboard.getString("unshift_" + e.getCode().getName().replaceAll("\\s", ""));
-						} catch (MissingResourceException exception) {
-							LOGGER.error("Virtual Keyboard", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									exception.getMessage());
-							key = null;
-						}
-						if (key != null) {
-							textField.fireEvent(new KeyEvent(KeyEvent.KEY_TYPED, key, e.getCode().getName(),
-									e.getCode(), false, false, false, false));
-							textField.setEditable(false);
-						}
-					}
+				} catch (MissingResourceException exception) {
+					// Keys such as navigation/backspace/delete may not have a character
+					// mapping. In that case native JavaFX behavior is intentionally preserved.
+					mappedPhysicalKey.setLength(0);
 				}
 			}
 		});
 
-		textField.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(final ObservableValue<? extends String> obsVal, final String oldValue,
-					final String newValue) {
-				Platform.runLater(() -> {
-					textField.setEditable(true);
-				});
+		textField.addEventFilter(KeyEvent.KEY_TYPED, event -> {
+			if (vkType.toString().contains("vk")
+					|| event.isControlDown()
+					|| event.isAltDown()
+					|| event.isMetaDown()) {
+				return;
+			}
 
+			if (mappedPhysicalKey.length() > 0) {
+				String replacement = mappedPhysicalKey.toString();
+				mappedPhysicalKey.setLength(0);
+
+				// Stop the native character from being inserted a second time and perform
+				// one synchronous replacement at the current selection/caret position.
+				event.consume();
+				textField.replaceSelection(replacement);
 			}
 		});
 
+		textField.setOnKeyReleased(event -> mappedPhysicalKey.setLength(0));
 	}
 
 	public void focusListener(TextField field, double y, Node keyboardNode) {
