@@ -154,7 +154,7 @@ public abstract class FxControl  {
 					break;
 			}
 		}
-		visible(this.node, isFieldVisible(uiFieldDTO));
+		visible(this.node, isFieldVisible);
 		setMandatorySuffix(this.node);
 
 	}
@@ -163,8 +163,12 @@ public abstract class FxControl  {
 	 * Hide the field
 	 */
 	public void visible(Node node, boolean isVisible) {
-		node.setVisible(isVisible);
-		node.setManaged(isVisible);
+		if (node.isVisible() != isVisible) {
+			node.setVisible(isVisible);
+		}
+		if (node.isManaged() != isVisible) {
+			node.setManaged(isVisible);
+		}
 	}
 
 	public void setMandatorySuffix(Node node) {
@@ -181,7 +185,10 @@ public abstract class FxControl  {
 				if(node instanceof VBox) {
 					var element = ((VBox)node).getChildren().get(0);
 					if(element instanceof Label) {
-						((Label)element).setText(titleText);
+						Label label = (Label) element;
+						if (!titleText.equals(label.getText())) {
+							label.setText(titleText);
+						}
 					}
 				}
 			}

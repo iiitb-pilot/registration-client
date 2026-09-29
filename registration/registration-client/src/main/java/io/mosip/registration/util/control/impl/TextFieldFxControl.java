@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import io.mosip.registration.controller.*;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
 import org.springframework.context.ApplicationContext;
@@ -77,6 +79,9 @@ public class TextFieldFxControl extends FxControl {
 	private FXComponents fxComponents;
 	
 	private GenericController genericController;
+
+	private static final Duration REFRESH_DELAY = Duration.millis(120);
+	private final PauseTransition refreshDelay = new PauseTransition(REFRESH_DELAY);
 	
 	public TextFieldFxControl() {
 		ApplicationContext applicationContext = ClientApplication.getApplicationContext();
@@ -91,6 +96,7 @@ public class TextFieldFxControl extends FxControl {
 		}
 		genericController = applicationContext.getBean(GenericController.class);
 		this.auditFactory = applicationContext.getBean(AuditManagerService.class);
+		refreshDelay.setOnFinished(event -> refreshFields());
 	}
 
 	@Override
@@ -149,9 +155,8 @@ public class TextFieldFxControl extends FxControl {
 			} else {
 				getRegistrationDTo().getDemographics().remove(this.uiFieldDTO.getId());
 			}
-			LOGGER.info("invoked from Listener {}",uiFieldDTO.getId());
-			// Group level visibility listeners
-			refreshFields();
+			LOGGER.debug("invoked from Listener {}", uiFieldDTO.getId());
+			refreshDelay.playFromStart();
 		});
 	}
 
